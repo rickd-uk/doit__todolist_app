@@ -1,0 +1,75 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: docker.io/library/postgres:15-alpine
+    container_name: doit-dev-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: doit_db
+      POSTGRES_USER: doit_user
+      POSTGRES_PASSWORD: devpassword123
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - doit-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U doit_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: doit-dev-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: doit_db
+      DB_USER: doit_user
+      DB_PASSWORD: cherry20254PG
+      CORS_ORIGIN: http://localhost:5173
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - doit-dev-network
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: doit-dev-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:3000/api
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - doit-dev-network
+    command: npm run dev
+
+volumes:
+  postgres_dev_data:
+
+networks:
+  doit-dev-network:
+    driver: bridge

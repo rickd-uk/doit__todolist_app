@@ -74,63 +74,20 @@ fi
 
 cd ..
 
-# Database setup instructions
+# --- Database Prompt Section Removed ---
+
+# Start the servers
 echo ""
-echo -e "${YELLOW}📊 Database Setup${NC}"
-echo "Please ensure PostgreSQL is running and create the database:"
+echo -e "${GREEN}🚀 Starting development servers...${NC}"
 echo ""
-echo "  sudo -i -u postgres psql"
-echo "  CREATE USER todolist_user WITH PASSWORD 'your_password';"
-echo "  CREATE DATABASE todolist_db OWNER todolist_user;"
-echo "  GRANT ALL PRIVILEGES ON DATABASE todolist_db TO todolist_user;"
-echo "  \q"
+echo "This will automatically clear ports 3000 (backend) and 5173 (frontend)."
+echo "Backend will run on: http://localhost:3000"
+echo "Frontend will run on: http://localhost:5173"
+echo ""
+echo "Press Ctrl+C to stop both servers."
 echo ""
 
-# Ask if user wants to start the servers
-read -p "Do you want to start the development servers now? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  echo ""
-  echo -e "${GREEN}🚀 Starting development servers...${NC}"
-  echo ""
-  echo "Backend will run on: http://localhost:3000"
-  echo "Frontend will run on: http://localhost:5173"
-  echo ""
-  echo "Press Ctrl+C to stop both servers"
-  echo ""
-
-  # Start backend in background
-  cd backend
-  npm run dev &
-  BACKEND_PID=$!
-  cd ..
-
-  # Wait a bit for backend to start
-  sleep 3
-
-  # Start frontend in background
-  cd frontend
-  npm run dev &
-  FRONTEND_PID=$!
-  cd ..
-
-  # Trap Ctrl+C to kill both processes
-  trap "kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit" INT TERM
-
-  # Wait for both processes
-  wait
-else
-  echo ""
-  echo -e "${GREEN}✅ Setup complete!${NC}"
-  echo ""
-  echo "To start the development servers manually:"
-  echo ""
-  echo "Terminal 1 (Backend):"
-  echo "  cd backend"
-  echo "  npm run dev"
-  echo ""
-  echo "Terminal 2 (Frontend):"
-  echo "  cd frontend"
-  echo "  npm run dev"
-  echo ""
-fi
+# Run the main dev script from the root
+# This automatically runs 'predev' (to kill ports)
+# and 'dev' (using concurrently)
+npm run dev

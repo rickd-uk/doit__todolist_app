@@ -1,0 +1,14 @@
+{
+  "name": "doit-project-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:backend": "cd backend && npm run dev",
+    "start:frontend": "cd frontend && npm run dev",
+    "predev": "npx kill-port 3000 5173",
+    "dev": "concurrently \"npm:start:backend\" \"npm:start:frontend\""
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
