@@ -37,7 +37,9 @@
       <TodoForm
         @submit="createTodo"
         @cancel="showNewTodoModal = false"
+        @createCategory="createCategoryFromTodoForm"
         :categories="categories"
+        :activeCategory="activeCategory"
       />
     </Modal>
 
@@ -47,7 +49,9 @@
         :todo="editingTodo"
         @submit="updateTodo"
         @cancel="showEditTodoModal = false"
+        @createCategory="createCategoryFromTodoForm"
         :categories="categories"
+        :activeCategory="activeCategory"
       />
     </Modal>
 
@@ -160,6 +164,17 @@ export default {
       }
     };
 
+    // Handle category creation from within TodoForm
+    const createCategoryFromTodoForm = async (categoryData) => {
+      try {
+        await store.dispatch("createCategory", categoryData);
+        // Refresh categories to get the new one
+        await store.dispatch("fetchCategories");
+      } catch (error) {
+        console.error("Failed to create category from todo form:", error);
+      }
+    };
+
     const updateTodos = async (todos) => {
       try {
         // Map to the format the backend expects (just id and order)
@@ -202,6 +217,7 @@ export default {
       updateTodo,
       deleteTodo,
       createCategory,
+      createCategoryFromTodoForm,
       updateTodos,
       clearError,
     };
