@@ -5,7 +5,9 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
   color: #333;
@@ -111,6 +113,7 @@ body {
   background: #f7fafc;
   border-bottom: 2px solid #e2e8f0;
   overflow-x: auto;
+  align-items: center;
 }
 
 .category-tab {
@@ -150,33 +153,30 @@ body {
   font-weight: 500;
 }
 
-.tab-delete {
-  background: rgba(0, 0, 0, 0.1);
+/* Category Actions - Delete button section */
+.category-actions {
+  margin-left: auto;
+  padding-left: 15px;
+  border-left: 2px solid #e2e8f0;
+}
+
+.btn-delete-category {
+  padding: 8px 16px;
+  background: #fc8181;
+  color: white;
   border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 18px;
-  line-height: 1;
-  color: #fff;
-  opacity: 0;
-  transition: opacity 0.2s;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
-.category-tab:hover .tab-delete {
-  opacity: 1;
-}
-
-.category-tab.active .tab-delete {
-  opacity: 1;
-}
-
-.tab-delete:hover {
-  background: rgba(0, 0, 0, 0.3);
+.btn-delete-category:hover {
+  background: #f56565;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(252, 129, 129, 0.3);
 }
 
 /* Main Content */
@@ -500,6 +500,20 @@ textarea.form-control {
   }
 
   .form-actions .btn {
+    width: 100%;
+  }
+
+  .category-actions {
+    width: 100%;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+    border-top: 2px solid #e2e8f0;
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+
+  .btn-delete-category {
     width: 100%;
   }
 }

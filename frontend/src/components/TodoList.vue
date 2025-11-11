@@ -4,7 +4,7 @@
       <p>No todos yet. Create your first one! 🎯</p>
     </div>
 
-    <draggable 
+    <draggable
       v-else
       v-model="localTodos"
       item-key="id"
@@ -13,7 +13,7 @@
       handle=".drag-handle"
     >
       <template #item="{ element: todo }">
-        <div class="todo-item">
+        <div class="todo-item" :key="todo.id">
           <div class="drag-handle">
             <span>⋮⋮</span>
           </div>
@@ -22,14 +22,14 @@
             <div class="todo-header">
               <h3 class="todo-title">{{ todo.title }}</h3>
               <div class="todo-actions">
-                <button 
+                <button
                   class="btn-icon btn-edit"
                   @click="$emit('editTodo', todo)"
                   title="Edit todo"
                 >
                   ✏️
                 </button>
-                <button 
+                <button
                   class="btn-icon btn-delete"
                   @click="$emit('deleteTodo', todo.id)"
                   title="Delete todo"
@@ -45,16 +45,16 @@
 
             <div class="todo-meta">
               <span v-if="todo.category" class="todo-category">
-                <span 
+                <span
                   class="category-indicator"
                   :style="{ backgroundColor: todo.category.color }"
                 ></span>
                 {{ todo.category.name }}
               </span>
               <span v-else class="todo-category">
-                <span 
+                <span
                   class="category-indicator"
-                  style="background-color: #808080;"
+                  style="background-color: #808080"
                 ></span>
                 Unspecified
               </span>
@@ -75,11 +75,11 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
-import draggable from 'vuedraggable';
+import { ref, watch } from "vue";
+import draggable from "vuedraggable";
 
 export default {
-  name: 'TodoList',
+  name: "TodoList",
   components: {
     draggable,
   },
@@ -93,25 +93,45 @@ export default {
       required: true,
     },
   },
-  emits: ['editTodo', 'deleteTodo', 'updateTodos'],
+  emits: ["editTodo", "deleteTodo", "updateTodos"],
   setup(props, { emit }) {
     const localTodos = ref([...props.todos]);
 
-    watch(() => props.todos, (newTodos) => {
-      localTodos.value = [...newTodos];
-    }, { deep: true });
+    watch(
+      () => props.todos,
+      (newTodos) => {
+        // Deep clone to preserve all todo properties including nested objects
+        localTodos.value = newTodos.map((todo) => ({
+          ...todo,
+          category: todo.category ? { ...todo.category } : null,
+        }));
+      },
+      { deep: true, immediate: true },
+    );
 
     const onDragEnd = () => {
-      emit('updateTodos', localTodos.value);
+      // Send the complete todo objects with all their data
+      const reorderedTodos = localTodos.value.map((todo, index) => ({
+        id: todo.id,
+        order: index,
+        categoryId: todo.categoryId,
+        title: todo.title,
+        description: todo.description,
+        dateCreated: todo.dateCreated,
+        dateToComplete: todo.dateToComplete,
+        completed: todo.completed,
+        category: todo.category,
+      }));
+      emit("updateTodos", reorderedTodos);
     };
 
     const formatDate = (date) => {
-      if (!date) return 'Unspecified';
+      if (!date) return "Unspecified";
       const d = new Date(date);
-      return d.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
     };
 
