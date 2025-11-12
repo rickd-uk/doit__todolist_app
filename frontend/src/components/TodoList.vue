@@ -64,12 +64,12 @@
                   truncateText(todo.category.name, 15)
                 }}</span>
               </span>
-              <span v-else class="todo-category" title="Unspecified">
+              <span v-else class="todo-category" title="Inbox">
                 <span
                   class="category-indicator"
                   style="background-color: #808080"
                 ></span>
-                <span class="category-name-mobile">Unspecified</span>
+                <span class="category-name-mobile">Inbox</span>
               </span>
 
               <span
@@ -116,7 +116,7 @@
                       backgroundColor: viewingTodo.category?.color || '#808080',
                     }"
                   ></span>
-                  {{ viewingTodo.category?.name || "Unspecified" }}
+                  {{ viewingTodo.category?.name || "Inbox" }}
                 </span>
               </div>
               <div class="detail-row">

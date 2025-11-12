@@ -15,7 +15,7 @@
       @click="$emit('selectCategory', 'unspecified')"
     >
       <span class="tab-color" style="background-color: #808080"></span>
-      <span class="tab-label">Unspecified</span>
+      <span class="tab-label">Inbox</span>
     </div>
 
     <div
@@ -24,12 +24,16 @@
       class="category-tab"
       :class="{ active: activeCategory === category.id }"
       @click="$emit('selectCategory', category.id)"
+      :title="category.description || category.name"
     >
       <span
         class="tab-color"
         :style="{ backgroundColor: category.color }"
       ></span>
       <span class="tab-label">{{ category.name }}</span>
+      <span v-if="category.description" class="tab-description">{{
+        truncateDescription(category.description)
+      }}</span>
     </div>
 
     <!-- Category action buttons - appears only when a category is selected -->
@@ -97,11 +101,19 @@ export default {
       emit("deleteCategory", categoryId);
     };
 
+    const truncateDescription = (description) => {
+      if (!description) return "";
+      return description.length > 30
+        ? description.substring(0, 30) + "..."
+        : description;
+    };
+
     return {
       sortedCategories,
       hasUnspecifiedTodos,
       editCategory,
       deleteCategory,
+      truncateDescription,
     };
   },
 };
@@ -142,6 +154,23 @@ export default {
   border-color: #fc8181;
 }
 
+.btn-delete-category:hover {
+  background: #fc8181;
+  border-color: #fc8181;
+}
+
+.tab-description {
+  font-size: 11px;
+  color: #718096;
+  font-weight: 400;
+  margin-left: 4px;
+  font-style: italic;
+}
+
+.category-tab.active .tab-description {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 @media (max-width: 768px) {
   .category-actions {
     width: auto;
@@ -152,6 +181,10 @@ export default {
 
   .btn-action {
     padding: 8px 12px;
+  }
+
+  .tab-description {
+    display: none;
   }
 }
 </style>

@@ -35,7 +35,7 @@
             class="form-control"
             :disabled="showNewCategoryForm"
           >
-            <option :value="null">Unspecified</option>
+            <option :value="null">Inbox</option>
             <option
               v-for="category in filteredCategories"
               :key="category.id"
@@ -113,12 +113,38 @@
 
       <div class="form-group">
         <label for="dateToComplete">Due Date</label>
-        <input
-          id="dateToComplete"
-          v-model="formData.dateToComplete"
-          type="date"
-          class="form-control"
-        />
+        <div class="date-input-group">
+          <input
+            id="dateToComplete"
+            v-model="formData.dateToComplete"
+            type="date"
+            class="form-control"
+          />
+          <button
+            type="button"
+            @click="setQuickDate('tomorrow')"
+            class="btn btn-quick-date"
+            title="Tomorrow"
+          >
+            Tomorrow
+          </button>
+          <button
+            type="button"
+            @click="setQuickDate('2days')"
+            class="btn btn-quick-date"
+            title="In 2 days"
+          >
+            2 days
+          </button>
+          <button
+            type="button"
+            @click="setQuickDate('week')"
+            class="btn btn-quick-date"
+            title="In 7 days"
+          >
+            7 days
+          </button>
+        </div>
       </div>
 
       <div class="form-actions">
@@ -184,7 +210,7 @@ export default {
       categoryId: props.todo?.categoryId || getDefaultCategory(),
       dateToComplete: props.todo?.dateToComplete
         ? new Date(props.todo.dateToComplete).toISOString().split("T")[0]
-        : getTodayDate(),
+        : "", // No default date
     });
 
     const generateRandomColor = () => {
@@ -219,6 +245,25 @@ export default {
 
     const randomizeNewCategoryColor = () => {
       newCategory.value.color = generateRandomColor();
+    };
+
+    const setQuickDate = (type) => {
+      const today = new Date();
+      let targetDate = new Date();
+
+      switch (type) {
+        case "tomorrow":
+          targetDate.setDate(today.getDate() + 1);
+          break;
+        case "2days":
+          targetDate.setDate(today.getDate() + 2);
+          break;
+        case "week":
+          targetDate.setDate(today.getDate() + 7);
+          break;
+      }
+
+      formData.value.dateToComplete = targetDate.toISOString().split("T")[0];
     };
 
     const createNewCategory = async () => {
@@ -265,6 +310,7 @@ export default {
       toggleNewCategoryForm,
       randomizeNewCategoryColor,
       createNewCategory,
+      setQuickDate,
       handleSubmit,
     };
   },
@@ -335,5 +381,51 @@ export default {
 
 .btn-full {
   width: 100%;
+}
+
+.date-input-group {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+
+.date-input-group .form-control {
+  flex: 1;
+  min-width: 150px;
+}
+
+.btn-quick-date {
+  padding: 8px 10px;
+  background: #edf2f7;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-quick-date:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 480px) {
+  .date-input-group {
+    flex-direction: column;
+  }
+
+  .date-input-group .form-control {
+    width: 100%;
+  }
+
+  .btn-quick-date {
+    width: 100%;
+  }
 }
 </style>
