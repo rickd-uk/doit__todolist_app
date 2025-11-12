@@ -1,9 +1,9 @@
 <template>
   <div id="app" class="app-container">
     <header class="app-header">
-      <h1>📝 Advanced TodoList</h1>
+      <h1>📝 Doit</h1>
       <button @click="showNewCategoryModal = true" class="btn btn-primary">
-        + New Category
+        ➕ Category
       </button>
     </header>
 
@@ -13,12 +13,13 @@
         :activeCategory="activeCategory"
         :todos="allTodos"
         @selectCategory="selectCategory"
+        @editCategory="editCategory"
       />
 
       <div class="main-content">
         <div class="toolbar">
           <button @click="showNewTodoModal = true" class="btn btn-success">
-            + Add Todo
+            ➕ Todo
           </button>
         </div>
 
@@ -63,6 +64,15 @@
       />
     </Modal>
 
+    <!-- Edit Category Modal -->
+    <Modal v-if="showEditCategoryModal" @close="showEditCategoryModal = false">
+      <CategoryForm
+        :category="editingCategory"
+        @submit="updateCategory"
+        @cancel="showEditCategoryModal = false"
+      />
+    </Modal>
+
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
@@ -100,7 +110,9 @@ export default {
     const showNewTodoModal = ref(false);
     const showEditTodoModal = ref(false);
     const showNewCategoryModal = ref(false);
+    const showEditCategoryModal = ref(false);
     const editingTodo = ref(null);
+    const editingCategory = ref(null);
 
     const categories = computed(() => store.getters.allCategories);
     const allTodos = computed(() => store.getters.allTodos);
@@ -164,11 +176,30 @@ export default {
       }
     };
 
-    // Handle category creation from within TodoForm
+    const editCategory = (categoryId) => {
+      const category = categories.value.find((cat) => cat.id === categoryId);
+      if (category) {
+        editingCategory.value = { ...category };
+        showEditCategoryModal.value = true;
+      }
+    };
+
+    const updateCategory = async (categoryData) => {
+      try {
+        await store.dispatch("updateCategory", {
+          id: editingCategory.value.id,
+          data: categoryData,
+        });
+        showEditCategoryModal.value = false;
+        editingCategory.value = null;
+      } catch (error) {
+        console.error("Failed to update category:", error);
+      }
+    };
+
     const createCategoryFromTodoForm = async (categoryData) => {
       try {
         await store.dispatch("createCategory", categoryData);
-        // Refresh categories to get the new one
         await store.dispatch("fetchCategories");
       } catch (error) {
         console.error("Failed to create category from todo form:", error);
@@ -177,21 +208,16 @@ export default {
 
     const updateTodos = async (todos) => {
       try {
-        // Map to the format the backend expects (just id and order)
         const reorderedTodos = todos.map((todo, index) => ({
           id: todo.id,
           order: index,
           categoryId: todo.categoryId,
         }));
 
-        // Update the backend
         await store.dispatch("reorderTodos", reorderedTodos);
-
-        // Force a refresh to get the updated data with all relations
         await store.dispatch("fetchTodos");
       } catch (error) {
         console.error("Failed to reorder todos:", error);
-        // Refresh on error to restore correct state
         await store.dispatch("fetchTodos");
       }
     };
@@ -204,7 +230,9 @@ export default {
       showNewTodoModal,
       showEditTodoModal,
       showNewCategoryModal,
+      showEditCategoryModal,
       editingTodo,
+      editingCategory,
       categories,
       allTodos,
       filteredTodos,
@@ -217,6 +245,8 @@ export default {
       updateTodo,
       deleteTodo,
       createCategory,
+      editCategory,
+      updateCategory,
       createCategoryFromTodoForm,
       updateTodos,
       clearError,

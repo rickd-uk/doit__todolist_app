@@ -1,6 +1,6 @@
 <template>
   <div class="form-container">
-    <h2>{{ isEditing ? "Edit Todo" : "New Todo" }}</h2>
+    <h2>{{ isEditing ? "✏️ Edit Todo" : "➕ New Todo" }}</h2>
 
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
@@ -22,7 +22,7 @@
           v-model="formData.description"
           placeholder="Enter description (optional)"
           class="form-control"
-          rows="4"
+          rows="3"
         ></textarea>
       </div>
 
@@ -47,10 +47,11 @@
           <button
             type="button"
             @click="toggleNewCategoryForm"
-            class="btn btn-secondary"
+            class="btn btn-secondary btn-icon-text"
             :class="{ 'btn-active': showNewCategoryForm }"
+            :title="showNewCategoryForm ? 'Cancel' : 'New Category'"
           >
-            {{ showNewCategoryForm ? "Cancel" : "+ New" }}
+            {{ showNewCategoryForm ? "✖" : "➕" }}
           </button>
         </div>
 
@@ -81,26 +82,20 @@
 
           <div class="form-group">
             <label for="newCategoryColor">Color</label>
-            <div class="color-input-group">
+            <div class="color-input-group-compact">
               <input
                 id="newCategoryColor"
                 v-model="newCategory.color"
                 type="color"
                 class="form-control-color"
               />
-              <input
-                v-model="newCategory.color"
-                type="text"
-                placeholder="#000000"
-                class="form-control"
-                pattern="^#[0-9A-Fa-f]{6}$"
-              />
               <button
                 type="button"
                 @click="randomizeNewCategoryColor"
                 class="btn btn-secondary"
+                title="Random Color"
               >
-                Random
+                🎲
               </button>
             </div>
           </div>
@@ -108,10 +103,10 @@
           <button
             type="button"
             @click="createNewCategory"
-            class="btn btn-success"
+            class="btn btn-success btn-full"
             :disabled="!newCategory.name"
           >
-            Create Category
+            ✅ Create Category
           </button>
         </div>
       </div>
@@ -132,10 +127,10 @@
           @click="$emit('cancel')"
           class="btn btn-secondary"
         >
-          Cancel
+          ✖ Cancel
         </button>
         <button type="submit" class="btn btn-primary">
-          {{ isEditing ? "Update" : "Create" }}
+          {{ isEditing ? "💾 Update" : "➕ Create" }}
         </button>
       </div>
     </form>
@@ -189,7 +184,7 @@ export default {
       categoryId: props.todo?.categoryId || getDefaultCategory(),
       dateToComplete: props.todo?.dateToComplete
         ? new Date(props.todo.dateToComplete).toISOString().split("T")[0]
-        : getTodayDate(), // Default to today
+        : getTodayDate(),
     });
 
     const generateRandomColor = () => {
@@ -214,7 +209,6 @@ export default {
     const toggleNewCategoryForm = () => {
       showNewCategoryForm.value = !showNewCategoryForm.value;
       if (showNewCategoryForm.value) {
-        // Reset form when opening
         newCategory.value = {
           name: "",
           description: "",
@@ -231,24 +225,19 @@ export default {
       if (!newCategory.value.name) return;
 
       try {
-        // Emit event to parent to create category
         emit("createCategory", {
           name: newCategory.value.name,
           description: newCategory.value.description || null,
           color: newCategory.value.color,
         });
 
-        // Wait a bit for the category to be created and added to the list
         setTimeout(() => {
-          // Find the newly created category by name and select it
           const createdCategory = props.categories.find(
             (cat) => cat.name === newCategory.value.name,
           );
           if (createdCategory) {
             formData.value.categoryId = createdCategory.id;
           }
-
-          // Close the new category form
           showNewCategoryForm.value = false;
         }, 500);
       } catch (error) {
@@ -285,7 +274,7 @@ export default {
 <style scoped>
 .category-input-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
 }
 
@@ -293,9 +282,10 @@ export default {
   flex: 1;
 }
 
-.category-input-group .btn {
-  white-space: nowrap;
-  min-width: 80px;
+.btn-icon-text {
+  min-width: 42px;
+  font-size: 18px;
+  padding: 8px 12px;
 }
 
 .btn-active {
@@ -308,40 +298,42 @@ export default {
 }
 
 .new-category-form {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: 12px;
+  padding: 12px;
   background: #f7fafc;
   border-radius: 8px;
   border: 2px solid #e2e8f0;
 }
 
 .new-category-form .form-group {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .new-category-form .form-group:last-of-type {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
-.new-category-form .btn {
-  width: 100%;
-}
-
-.color-input-group {
+.color-input-group-compact {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
 .form-control-color {
-  width: 60px;
-  height: 40px;
+  width: 50px;
+  height: 38px;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
-.color-input-group .form-control {
+.color-input-group-compact .btn {
   flex: 1;
+  font-size: 20px;
+}
+
+.btn-full {
+  width: 100%;
 }
 </style>

@@ -1,7 +1,7 @@
 <template>
   <div class="form-container">
-    <h2>{{ isEditing ? 'Edit Category' : 'New Category' }}</h2>
-    
+    <h2>{{ isEditing ? "✏️ Edit Category" : "➕ New Category" }}</h2>
+
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
         <label for="name">Name *</label>
@@ -35,29 +35,27 @@
             type="color"
             class="form-control-color"
           />
-          <input
-            v-model="formData.color"
-            type="text"
-            placeholder="#000000"
-            class="form-control"
-            pattern="^#[0-9A-Fa-f]{6}$"
-          />
-          <button 
-            type="button" 
+          <button
+            type="button"
             @click="randomizeColor"
             class="btn btn-secondary"
+            title="Random Color"
           >
-            Random
+            🎲 Random
           </button>
         </div>
       </div>
 
       <div class="form-actions">
-        <button type="button" @click="$emit('cancel')" class="btn btn-secondary">
-          Cancel
+        <button
+          type="button"
+          @click="$emit('cancel')"
+          class="btn btn-secondary"
+        >
+          ✖ Cancel
         </button>
         <button type="submit" class="btn btn-primary">
-          {{ isEditing ? 'Update' : 'Create' }}
+          {{ isEditing ? "💾 Update" : "➕ Create" }}
         </button>
       </div>
     </form>
@@ -65,27 +63,32 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed } from "vue";
 
 export default {
-  name: 'CategoryForm',
+  name: "CategoryForm",
   props: {
     category: {
       type: Object,
       default: null,
     },
   },
-  emits: ['submit', 'cancel'],
+  emits: ["submit", "cancel"],
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.category);
 
     const generateRandomColor = () => {
-      return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+      return (
+        "#" +
+        Math.floor(Math.random() * 16777215)
+          .toString(16)
+          .padStart(6, "0")
+      );
     };
 
     const formData = ref({
-      name: props.category?.name || '',
-      description: props.category?.description || '',
+      name: props.category?.name || "",
+      description: props.category?.description || "",
       color: props.category?.color || generateRandomColor(),
     });
 
@@ -99,8 +102,8 @@ export default {
         description: formData.value.description || null,
         color: formData.value.color,
       };
-      
-      emit('submit', submitData);
+
+      emit("submit", submitData);
     };
 
     return {
@@ -112,3 +115,24 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.color-input-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-control-color {
+  width: 60px;
+  height: 40px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-input-group .btn {
+  flex: 1;
+}
+</style>
