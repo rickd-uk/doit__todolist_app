@@ -31,9 +31,6 @@
         :style="{ backgroundColor: category.color }"
       ></span>
       <span class="tab-label">{{ category.name }}</span>
-      <span v-if="category.description" class="tab-description">{{
-        truncateDescription(category.description)
-      }}</span>
     </div>
 
     <!-- Category action buttons - appears only when a category is selected -->
@@ -57,10 +54,51 @@
       </button>
     </div>
   </div>
+
+  <!-- Category Description Bar (shown below tabs when category is selected) -->
+  <div
+    v-if="
+      showDescriptionBar &&
+      activeCategory !== 'all' &&
+      activeCategory !== 'unspecified'
+    "
+    class="category-description-bar"
+  >
+    <div class="description-content">
+      <span class="description-icon">ℹ️</span>
+      <span class="description-text">{{ activeCategoryDescription }}</span>
+    </div>
+    <button
+      class="btn-hide-description"
+      @click="toggleDescriptionBar"
+      title="Hide descriptions"
+    >
+      ✖
+    </button>
+  </div>
+
+  <!-- Show Description Button (when hidden) -->
+  <div
+    v-if="
+      !showDescriptionBar &&
+      activeCategoryDescription &&
+      activeCategory !== 'all' &&
+      activeCategory !== 'unspecified'
+    "
+    class="show-description-bar"
+  >
+    <button
+      class="btn-show-description"
+      @click="toggleDescriptionBar"
+      title="Show description"
+    >
+      ℹ️ Show Description
+    </button>
+  </div>
 </template>
 
 <script>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useStore } from "vuex";
 
 export default {
@@ -82,15 +120,29 @@ export default {
   emits: ["selectCategory", "editCategory", "deleteCategory"],
   setup(props, { emit }) {
     const store = useStore();
+    const showDescriptionBar = ref(true); // Start visible by default
 
     const sortedCategories = computed(() => {
       return [...props.categories]
-        .filter((cat) => cat.name !== "Unspecified")
+        .filter((cat) => cat.name !== "Inbox")
         .sort((a, b) => a.order - b.order);
     });
 
     const hasUnspecifiedTodos = computed(() => {
       return props.todos.some((todo) => !todo.categoryId);
+    });
+
+    const activeCategoryDescription = computed(() => {
+      if (
+        props.activeCategory === "all" ||
+        props.activeCategory === "unspecified"
+      ) {
+        return "";
+      }
+      const category = props.categories.find(
+        (cat) => cat.id === props.activeCategory,
+      );
+      return category?.description || "";
     });
 
     const editCategory = (categoryId) => {
@@ -101,19 +153,18 @@ export default {
       emit("deleteCategory", categoryId);
     };
 
-    const truncateDescription = (description) => {
-      if (!description) return "";
-      return description.length > 30
-        ? description.substring(0, 30) + "..."
-        : description;
+    const toggleDescriptionBar = () => {
+      showDescriptionBar.value = !showDescriptionBar.value;
     };
 
     return {
       sortedCategories,
       hasUnspecifiedTodos,
+      activeCategoryDescription,
+      showDescriptionBar,
       editCategory,
       deleteCategory,
-      truncateDescription,
+      toggleDescriptionBar,
     };
   },
 };
@@ -159,16 +210,76 @@ export default {
   border-color: #fc8181;
 }
 
-.tab-description {
-  font-size: 11px;
-  color: #718096;
-  font-weight: 400;
-  margin-left: 4px;
+/* Category Description Bar */
+.category-description-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 15px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.description-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.description-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.description-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-style: italic;
 }
 
-.category-tab.active .tab-description {
-  color: rgba(255, 255, 255, 0.8);
+.btn-hide-description {
+  background: transparent;
+  border: none;
+  color: #a0aec0;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-hide-description:hover {
+  color: #718096;
+}
+
+/* Show Description Button */
+.show-description-bar {
+  padding: 6px 15px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-show-description {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #718096;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-show-description:hover {
+  background: #edf2f7;
+  color: #4a5568;
+  border-color: #cbd5e0;
 }
 
 @media (max-width: 768px) {
@@ -183,8 +294,13 @@ export default {
     padding: 8px 12px;
   }
 
-  .tab-description {
-    display: none;
+  .category-description-bar {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .show-description-bar {
+    padding: 4px 12px;
   }
 }
 </style>
