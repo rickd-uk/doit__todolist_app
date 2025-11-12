@@ -75,7 +75,7 @@ export default {
       required: true,
     },
   },
-  emits: ["selectCategory", "editCategory"],
+  emits: ["selectCategory", "editCategory", "deleteCategory"],
   setup(props, { emit }) {
     const store = useStore();
 
@@ -93,18 +93,8 @@ export default {
       emit("editCategory", categoryId);
     };
 
-    const deleteCategory = async (categoryId) => {
-      if (
-        confirm(
-          "Are you sure you want to delete this category? Todos will be moved to Unspecified.",
-        )
-      ) {
-        try {
-          await store.dispatch("deleteCategory", categoryId);
-        } catch (error) {
-          console.error("Failed to delete category:", error);
-        }
-      }
+    const deleteCategory = (categoryId) => {
+      emit("deleteCategory", categoryId);
     };
 
     return {

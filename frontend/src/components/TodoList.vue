@@ -33,7 +33,7 @@
                 </button>
                 <button
                   class="btn-icon btn-delete"
-                  @click="$emit('deleteTodo', todo.id)"
+                  @click.stop="$emit('deleteTodo', todo.id)"
                   title="Delete todo"
                 >
                   🗑️

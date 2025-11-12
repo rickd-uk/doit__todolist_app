@@ -14,6 +14,7 @@
         :todos="allTodos"
         @selectCategory="selectCategory"
         @editCategory="editCategory"
+        @deleteCategory="showDeleteCategoryDialog"
       />
 
       <div class="main-content">
@@ -73,6 +74,17 @@
       />
     </Modal>
 
+    <!-- Delete Category Modal -->
+    <DeleteCategoryModal
+      v-if="showDeleteCategoryModal && deletingCategory"
+      :categoryName="deletingCategory.name"
+      :todosCount="
+        allTodos.filter((t) => t.categoryId === deletingCategory.id).length
+      "
+      @confirm="handleDeleteCategory"
+      @cancel="cancelDeleteCategory"
+    />
+
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
@@ -93,6 +105,7 @@ import CategoryTabs from "./components/CategoryTabs.vue";
 import TodoList from "./components/TodoList.vue";
 import TodoForm from "./components/TodoForm.vue";
 import CategoryForm from "./components/CategoryForm.vue";
+import DeleteCategoryModal from "./components/DeleteCategoryModal.vue";
 import Modal from "./components/Modal.vue";
 
 export default {
@@ -102,6 +115,7 @@ export default {
     TodoList,
     TodoForm,
     CategoryForm,
+    DeleteCategoryModal,
     Modal,
   },
   setup() {
@@ -111,8 +125,10 @@ export default {
     const showEditTodoModal = ref(false);
     const showNewCategoryModal = ref(false);
     const showEditCategoryModal = ref(false);
+    const showDeleteCategoryModal = ref(false);
     const editingTodo = ref(null);
     const editingCategory = ref(null);
+    const deletingCategory = ref(null);
 
     const categories = computed(() => store.getters.allCategories);
     const allTodos = computed(() => store.getters.allTodos);
@@ -158,12 +174,10 @@ export default {
     };
 
     const deleteTodo = async (todoId) => {
-      if (confirm("Are you sure you want to delete this todo?")) {
-        try {
-          await store.dispatch("deleteTodo", todoId);
-        } catch (error) {
-          console.error("Failed to delete todo:", error);
-        }
+      try {
+        await store.dispatch("deleteTodo", todoId);
+      } catch (error) {
+        console.error("Failed to delete todo:", error);
       }
     };
 
@@ -182,6 +196,44 @@ export default {
         editingCategory.value = { ...category };
         showEditCategoryModal.value = true;
       }
+    };
+
+    const showDeleteCategoryDialog = (categoryId) => {
+      const category = categories.value.find((cat) => cat.id === categoryId);
+      if (category) {
+        deletingCategory.value = category;
+        showDeleteCategoryModal.value = true;
+      }
+    };
+
+    const handleDeleteCategory = async (alsoDeleteTodos) => {
+      if (!deletingCategory.value) return;
+
+      try {
+        if (alsoDeleteTodos) {
+          // Delete all todos in this category first
+          const todosInCategory = allTodos.value.filter(
+            (todo) => todo.categoryId === deletingCategory.value.id,
+          );
+
+          for (const todo of todosInCategory) {
+            await store.dispatch("deleteTodo", todo.id);
+          }
+        }
+
+        // Then delete the category
+        await store.dispatch("deleteCategory", deletingCategory.value.id);
+
+        showDeleteCategoryModal.value = false;
+        deletingCategory.value = null;
+      } catch (error) {
+        console.error("Failed to delete category:", error);
+      }
+    };
+
+    const cancelDeleteCategory = () => {
+      showDeleteCategoryModal.value = false;
+      deletingCategory.value = null;
     };
 
     const updateCategory = async (categoryData) => {
@@ -231,8 +283,10 @@ export default {
       showEditTodoModal,
       showNewCategoryModal,
       showEditCategoryModal,
+      showDeleteCategoryModal,
       editingTodo,
       editingCategory,
+      deletingCategory,
       categories,
       allTodos,
       filteredTodos,
@@ -247,6 +301,9 @@ export default {
       createCategory,
       editCategory,
       updateCategory,
+      showDeleteCategoryDialog,
+      handleDeleteCategory,
+      cancelDeleteCategory,
       createCategoryFromTodoForm,
       updateTodos,
       clearError,
