@@ -1,57 +1,100 @@
 <template>
-  <div class="category-tabs">
-    <div
-      class="category-tab"
-      :class="{ active: activeCategory === 'all' }"
-      @click="$emit('selectCategory', 'all')"
-    >
-      <span class="tab-label">📋 All</span>
-    </div>
-
-    <div
-      v-if="hasUnspecifiedTodos"
-      class="category-tab"
-      :class="{ active: activeCategory === 'unspecified' }"
-      @click="$emit('selectCategory', 'unspecified')"
-    >
-      <span class="tab-color" style="background-color: #808080"></span>
-      <span class="tab-label">Inbox</span>
-    </div>
-
-    <div
-      v-for="category in sortedCategories"
-      :key="category.id"
-      class="category-tab"
-      :class="{ active: activeCategory === category.id }"
-      @click="$emit('selectCategory', category.id)"
-      :title="category.description || category.name"
-    >
-      <span
-        class="tab-color"
-        :style="{ backgroundColor: category.color }"
-      ></span>
-      <span class="tab-label">{{ category.name }}</span>
-    </div>
-
-    <!-- Category action buttons - appears only when a category is selected -->
-    <div
-      v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
-      class="category-actions"
-    >
-      <button
-        class="btn-action btn-edit-category"
-        @click="editCategory(activeCategory)"
-        title="Edit category"
+  <div class="category-tabs-wrapper">
+    <!-- Desktop/Tablet View: Tabs -->
+    <div class="category-tabs category-tabs-desktop">
+      <div
+        class="category-tab"
+        :class="{ active: activeCategory === 'all' }"
+        @click="$emit('selectCategory', 'all')"
       >
-        ✏️
-      </button>
-      <button
-        class="btn-action btn-delete-category"
-        @click="deleteCategory(activeCategory)"
-        title="Delete category"
+        <span class="tab-label">📋 All</span>
+      </div>
+
+      <div
+        v-if="hasUnspecifiedTodos"
+        class="category-tab"
+        :class="{ active: activeCategory === 'unspecified' }"
+        @click="$emit('selectCategory', 'unspecified')"
       >
-        🗑️
-      </button>
+        <span class="tab-color" style="background-color: #808080"></span>
+        <span class="tab-label">Inbox</span>
+      </div>
+
+      <div
+        v-for="category in sortedCategories"
+        :key="category.id"
+        class="category-tab"
+        :class="{ active: activeCategory === category.id }"
+        @click="$emit('selectCategory', category.id)"
+        :title="category.description || category.name"
+      >
+        <span
+          class="tab-color"
+          :style="{ backgroundColor: category.color }"
+        ></span>
+        <span class="tab-label">{{ category.name }}</span>
+      </div>
+
+      <!-- Category action buttons - appears only when a category is selected -->
+      <div
+        v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
+        class="category-actions"
+      >
+        <button
+          class="btn-action btn-edit-category"
+          @click="editCategory(activeCategory)"
+          title="Edit category"
+        >
+          ✏️
+        </button>
+        <button
+          class="btn-action btn-delete-category"
+          @click="deleteCategory(activeCategory)"
+          title="Delete category"
+        >
+          🗑️
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile View: Dropdown -->
+    <div class="category-tabs category-tabs-mobile">
+      <select
+        :value="activeCategory"
+        @change="$emit('selectCategory', $event.target.value)"
+        class="category-select"
+      >
+        <option value="all">📋 All</option>
+        <option v-if="hasUnspecifiedTodos" value="unspecified">Inbox</option>
+        <option
+          v-for="category in sortedCategories"
+          :key="category.id"
+          :value="category.id"
+        >
+          {{ category.name }}
+        </option>
+      </select>
+
+      <!-- Mobile action buttons -->
+      <div
+        v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
+        class="category-actions-mobile"
+      >
+        <button
+          class="btn-action btn-edit-category"
+          @click="editCategory(activeCategory)"
+          title="Edit category"
+        >
+          ✏️
+        </button>
+        <button
+          class="btn-action btn-delete-category"
+          @click="deleteCategory(activeCategory)"
+          title="Delete category"
+        >
+          🗑️
+        </button>
+      </div>
     </div>
   </div>
 
@@ -210,6 +253,33 @@ export default {
   border-color: #fc8181;
 }
 
+/* Mobile Dropdown View */
+.category-tabs-mobile {
+  display: none;
+}
+
+.category-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: #2d3748;
+  cursor: pointer;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.category-actions-mobile {
+  display: flex;
+  gap: 6px;
+}
+
 /* Category Description Bar */
 .category-description-bar {
   display: flex;
@@ -283,6 +353,16 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .category-tabs-desktop {
+    display: none !important;
+  }
+
+  .category-tabs-mobile {
+    display: flex !important;
+    gap: 8px;
+    align-items: center;
+  }
+
   .category-actions {
     width: auto;
     margin-left: 0;

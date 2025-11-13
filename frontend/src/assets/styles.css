@@ -114,6 +114,25 @@ body {
   border-bottom: 2px solid #e2e8f0;
   overflow-x: auto;
   align-items: center;
+  flex-wrap: nowrap;
+}
+
+.category-tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.category-tabs::-webkit-scrollbar-track {
+  background: #edf2f7;
+  border-radius: 3px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.category-tabs::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
 }
 
 .category-tab {
@@ -477,6 +496,8 @@ textarea.form-control {
   .category-tabs {
     padding: 10px;
     gap: 4px;
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .category-tab {

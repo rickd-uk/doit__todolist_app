@@ -94,7 +94,7 @@
 
     <!-- Todo Detail Modal -->
     <div v-if="viewingTodo" class="modal-overlay" @click.self="closeViewModal">
-      <div class="modal-content modal-compact">
+      <div class="modal-content modal-wide">
         <button class="modal-close" @click="closeViewModal">×</button>
         <div class="todo-detail">
           <h2>{{ viewingTodo.title }}</h2>
@@ -269,6 +269,11 @@ export default {
 
 .modal-compact {
   max-width: 500px;
+}
+
+.modal-wide {
+  max-width: 95vw;
+  width: 100%;
 }
 
 .todo-detail {
