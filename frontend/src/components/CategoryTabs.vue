@@ -1,6 +1,6 @@
 <template>
   <!-- Desktop: Horizontal Tabs -->
-  <div class="category-tabs-desktop">
+  <div>
     <div class="category-tabs">
       <div
         class="category-tab"
@@ -77,45 +77,6 @@
     >
       <button class="btn-show-description" @click="toggleDescriptionBar">
         ℹ️ Show Description
-      </button>
-    </div>
-  </div>
-
-  <!-- Mobile: Dropdown -->
-  <div class="category-tabs-mobile">
-    <select
-      class="category-select"
-      :value="activeCategory"
-      @change="$emit('selectCategory', $event.target.value)"
-    >
-      <option value="all">📋 All</option>
-      <option v-if="hasUnspecifiedTodos" value="unspecified">📥 Inbox</option>
-      <option
-        v-for="category in sortedCategories"
-        :key="category.id"
-        :value="category.id"
-      >
-        {{ category.emoji || "📌" }} {{ category.name }}
-      </option>
-    </select>
-
-    <div
-      v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
-      class="category-actions-mobile"
-    >
-      <button
-        class="btn-action btn-edit-category"
-        @click="editCategory(activeCategory)"
-        title="Edit category"
-      >
-        ✏️
-      </button>
-      <button
-        class="btn-action btn-delete-category"
-        @click="deleteCategory(activeCategory)"
-        title="Delete category"
-      >
-        🗑️
       </button>
     </div>
   </div>
@@ -198,6 +159,7 @@ export default {
 /* Desktop Tabs */
 .category-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 15px;
   background: #f7fafc;
@@ -272,36 +234,6 @@ export default {
   border-color: #fc8181;
 }
 
-/* Mobile Dropdown */
-.category-tabs-mobile {
-  display: none;
-  padding: 15px;
-  background: #f7fafc;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.category-select {
-  flex: 1;
-  padding: 8px 12px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
-  font-size: 16px;
-  font-weight: 500;
-  color: #2d3748;
-  cursor: pointer;
-}
-
-.category-select:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.category-actions-mobile {
-  display: flex;
-  gap: 6px;
-}
-
 /* Description Bar */
 .category-description-bar {
   display: flex;
@@ -374,14 +306,14 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .category-tabs-desktop {
-    display: none !important;
+  .category-tabs {
+    gap: 10px;
+    padding: 12px;
   }
 
-  .category-tabs-mobile {
-    display: flex !important;
-    gap: 8px;
-    align-items: center;
+  .category-tab {
+    min-width: 56px;
+    min-height: 56px;
   }
 
   .tab-emoji {
@@ -391,6 +323,14 @@ export default {
   .btn-action {
     padding: 10px 14px;
     font-size: 20px;
+    min-width: 50px;
+    min-height: 50px;
+  }
+
+  .category-actions {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
   }
 }
 </style>
