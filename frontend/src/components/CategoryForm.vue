@@ -4,6 +4,29 @@
 
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
+        <label for="emoji">Icon *</label>
+        <select
+          id="emoji"
+          v-model="formData.emoji"
+          required
+          class="form-control emoji-select"
+        >
+          <option value="🛒">🛒 Shopping</option>
+          <option value="💊">💊 Health</option>
+          <option value="📚">📚 Teaching</option>
+          <option value="💻">💻 Programming</option>
+          <option value="👥">👥 People</option>
+          <option value="💰">💰 Money</option>
+          <option value="💡">💡 Ideas</option>
+          <option value="🏃">🏃 Exercise</option>
+          <option value="🏠">🏠 Home</option>
+          <option value="📞">📞 Calls</option>
+          <option value="✈️">✈️ Travel</option>
+          <option value="🎯">🎯 Goals</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <label for="name">Name *</label>
         <input
           id="name"
@@ -34,6 +57,13 @@
             v-model="formData.color"
             type="color"
             class="form-control-color"
+          />
+          <input
+            v-model="formData.color"
+            type="text"
+            placeholder="#000000"
+            class="form-control"
+            pattern="^#[0-9A-Fa-f]{6}$"
           />
           <button
             type="button"
@@ -87,6 +117,7 @@ export default {
     };
 
     const formData = ref({
+      emoji: props.category?.emoji || "🛒",
       name: props.category?.name || "",
       description: props.category?.description || "",
       color: props.category?.color || generateRandomColor(),
@@ -98,6 +129,7 @@ export default {
 
     const handleSubmit = () => {
       const submitData = {
+        emoji: formData.value.emoji,
         name: formData.value.name,
         description: formData.value.description || null,
         color: formData.value.color,
@@ -117,6 +149,11 @@ export default {
 </script>
 
 <style scoped>
+.emoji-select {
+  font-size: 18px;
+  padding: 12px 14px;
+}
+
 .color-input-group {
   display: flex;
   gap: 10px;
@@ -132,7 +169,11 @@ export default {
   flex-shrink: 0;
 }
 
-.color-input-group .btn {
+.color-input-group .form-control {
   flex: 1;
+}
+
+.color-input-group .btn {
+  white-space: nowrap;
 }
 </style>

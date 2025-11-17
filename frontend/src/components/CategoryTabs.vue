@@ -1,13 +1,14 @@
 <template>
-  <div class="category-tabs-wrapper">
-    <!-- Desktop/Tablet View: Tabs -->
-    <div class="category-tabs category-tabs-desktop">
+  <!-- Desktop: Horizontal Tabs -->
+  <div class="category-tabs-desktop">
+    <div class="category-tabs">
       <div
         class="category-tab"
         :class="{ active: activeCategory === 'all' }"
         @click="$emit('selectCategory', 'all')"
+        title="All"
       >
-        <span class="tab-label">📋 All</span>
+        <span class="tab-emoji">📋</span>
       </div>
 
       <div
@@ -15,9 +16,9 @@
         class="category-tab"
         :class="{ active: activeCategory === 'unspecified' }"
         @click="$emit('selectCategory', 'unspecified')"
+        title="Inbox"
       >
-        <span class="tab-color" style="background-color: #808080"></span>
-        <span class="tab-label">Inbox</span>
+        <span class="tab-emoji">📥</span>
       </div>
 
       <div
@@ -26,16 +27,12 @@
         class="category-tab"
         :class="{ active: activeCategory === category.id }"
         @click="$emit('selectCategory', category.id)"
-        :title="category.description || category.name"
+        :title="category.name"
       >
-        <span
-          class="tab-color"
-          :style="{ backgroundColor: category.color }"
-        ></span>
-        <span class="tab-label">{{ category.name }}</span>
+        <span class="tab-emoji">{{ category.emoji || "📌" }}</span>
       </div>
 
-      <!-- Category action buttons - appears only when a category is selected -->
+      <!-- Action buttons for selected category -->
       <div
         v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
         class="category-actions"
@@ -57,86 +54,70 @@
       </div>
     </div>
 
-    <!-- Mobile View: Dropdown -->
-    <div class="category-tabs category-tabs-mobile">
-      <select
-        :value="activeCategory"
-        @change="$emit('selectCategory', $event.target.value)"
-        class="category-select"
-      >
-        <option value="all">📋 All</option>
-        <option v-if="hasUnspecifiedTodos" value="unspecified">Inbox</option>
-        <option
-          v-for="category in sortedCategories"
-          :key="category.id"
-          :value="category.id"
-        >
-          {{ category.name }}
-        </option>
-      </select>
-
-      <!-- Mobile action buttons -->
-      <div
-        v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
-        class="category-actions-mobile"
-      >
-        <button
-          class="btn-action btn-edit-category"
-          @click="editCategory(activeCategory)"
-          title="Edit category"
-        >
-          ✏️
-        </button>
-        <button
-          class="btn-action btn-delete-category"
-          @click="deleteCategory(activeCategory)"
-          title="Delete category"
-        >
-          🗑️
-        </button>
+    <!-- Category Description Bar -->
+    <div
+      v-if="showDescriptionBar && activeCategoryDescription"
+      class="category-description-bar"
+    >
+      <div class="description-content">
+        <span class="description-icon">ℹ️</span>
+        <span class="description-text">{{ activeCategoryDescription }}</span>
       </div>
+      <button
+        class="btn-hide-description"
+        @click="toggleDescriptionBar"
+        title="Hide description"
+      >
+        ✖
+      </button>
+    </div>
+    <div
+      v-else-if="!showDescriptionBar && activeCategoryDescription"
+      class="show-description-bar"
+    >
+      <button class="btn-show-description" @click="toggleDescriptionBar">
+        ℹ️ Show Description
+      </button>
     </div>
   </div>
 
-  <!-- Category Description Bar (shown below tabs when category is selected) -->
-  <div
-    v-if="
-      showDescriptionBar &&
-      activeCategory !== 'all' &&
-      activeCategory !== 'unspecified'
-    "
-    class="category-description-bar"
-  >
-    <div class="description-content">
-      <span class="description-icon">ℹ️</span>
-      <span class="description-text">{{ activeCategoryDescription }}</span>
-    </div>
-    <button
-      class="btn-hide-description"
-      @click="toggleDescriptionBar"
-      title="Hide descriptions"
+  <!-- Mobile: Dropdown -->
+  <div class="category-tabs-mobile">
+    <select
+      class="category-select"
+      :value="activeCategory"
+      @change="$emit('selectCategory', $event.target.value)"
     >
-      ✖
-    </button>
-  </div>
+      <option value="all">📋 All</option>
+      <option v-if="hasUnspecifiedTodos" value="unspecified">📥 Inbox</option>
+      <option
+        v-for="category in sortedCategories"
+        :key="category.id"
+        :value="category.id"
+      >
+        {{ category.emoji || "📌" }} {{ category.name }}
+      </option>
+    </select>
 
-  <!-- Show Description Button (when hidden) -->
-  <div
-    v-if="
-      !showDescriptionBar &&
-      activeCategoryDescription &&
-      activeCategory !== 'all' &&
-      activeCategory !== 'unspecified'
-    "
-    class="show-description-bar"
-  >
-    <button
-      class="btn-show-description"
-      @click="toggleDescriptionBar"
-      title="Show description"
+    <div
+      v-if="activeCategory !== 'all' && activeCategory !== 'unspecified'"
+      class="category-actions-mobile"
     >
-      ℹ️ Show Description
-    </button>
+      <button
+        class="btn-action btn-edit-category"
+        @click="editCategory(activeCategory)"
+        title="Edit category"
+      >
+        ✏️
+      </button>
+      <button
+        class="btn-action btn-delete-category"
+        @click="deleteCategory(activeCategory)"
+        title="Delete category"
+      >
+        🗑️
+      </button>
+    </div>
   </div>
 </template>
 
@@ -163,7 +144,7 @@ export default {
   emits: ["selectCategory", "editCategory", "deleteCategory"],
   setup(props, { emit }) {
     const store = useStore();
-    const showDescriptionBar = ref(true); // Start visible by default
+    const showDescriptionBar = ref(true);
 
     const sortedCategories = computed(() => {
       return [...props.categories]
@@ -214,6 +195,49 @@ export default {
 </script>
 
 <style scoped>
+/* Desktop Tabs */
+.category-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 15px;
+  background: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
+  overflow-x: auto;
+  align-items: center;
+}
+
+.category-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  min-height: 50px;
+  padding: 8px;
+  background: white;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.category-tab:hover {
+  background: #edf2f7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.category-tab.active {
+  background: #667eea;
+  border-color: #5568d3;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.tab-emoji {
+  font-size: 28px;
+  line-height: 1;
+  user-select: none;
+}
+
 .category-actions {
   margin-left: auto;
   padding-left: 12px;
@@ -248,14 +272,12 @@ export default {
   border-color: #fc8181;
 }
 
-.btn-delete-category:hover {
-  background: #fc8181;
-  border-color: #fc8181;
-}
-
-/* Mobile Dropdown View */
+/* Mobile Dropdown */
 .category-tabs-mobile {
   display: none;
+  padding: 15px;
+  background: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .category-select {
@@ -264,7 +286,7 @@ export default {
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: white;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: #2d3748;
   cursor: pointer;
@@ -280,7 +302,7 @@ export default {
   gap: 6px;
 }
 
-/* Category Description Bar */
+/* Description Bar */
 .category-description-bar {
   display: flex;
   align-items: center;
@@ -328,7 +350,6 @@ export default {
   color: #718096;
 }
 
-/* Show Description Button */
 .show-description-bar {
   padding: 6px 15px;
   background: #f7fafc;
@@ -363,24 +384,13 @@ export default {
     align-items: center;
   }
 
-  .category-actions {
-    width: auto;
-    margin-left: 0;
-    padding-left: 0;
-    border-left: none;
+  .tab-emoji {
+    font-size: 32px;
   }
 
   .btn-action {
-    padding: 8px 12px;
-  }
-
-  .category-description-bar {
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-
-  .show-description-bar {
-    padding: 4px 12px;
+    padding: 10px 14px;
+    font-size: 20px;
   }
 }
 </style>

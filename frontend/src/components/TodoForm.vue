@@ -58,15 +58,26 @@
         <!-- Inline New Category Form -->
         <div v-if="showNewCategoryForm" class="new-category-form">
           <div class="form-group">
-            <label for="newCategoryName">Category Name *</label>
-            <input
-              id="newCategoryName"
-              v-model="newCategory.name"
-              type="text"
-              placeholder="Enter category name"
-              class="form-control"
+            <label for="newCategoryEmoji">Icon *</label>
+            <select
+              id="newCategoryEmoji"
+              v-model="newCategory.emoji"
               required
-            />
+              class="form-control emoji-select"
+            >
+              <option value="🛒">🛒 Shopping</option>
+              <option value="💊">💊 Health</option>
+              <option value="📚">📚 Teaching</option>
+              <option value="💻">💻 Programming</option>
+              <option value="👥">👥 People</option>
+              <option value="💰">💰 Money</option>
+              <option value="💡">💡 Ideas</option>
+              <option value="🏃">🏃 Exercise</option>
+              <option value="🏠">🏠 Home</option>
+              <option value="📞">📞 Calls</option>
+              <option value="✈️">✈️ Travel</option>
+              <option value="🎯">🎯 Goals</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -223,6 +234,7 @@ export default {
     };
 
     const newCategory = ref({
+      emoji: "🛒",
       name: "",
       description: "",
       color: generateRandomColor(),
