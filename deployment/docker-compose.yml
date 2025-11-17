@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -21,7 +21,7 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: todolist-backend
     restart: unless-stopped
@@ -44,7 +44,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: Dockerfile
     container_name: todolist-frontend
     restart: unless-stopped
@@ -63,10 +63,10 @@ services:
       - "443:443"
       - "8080:80"
     volumes:
-      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deployment/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./deployment/certbot/conf:/etc/letsencrypt:ro
-      - ./deployment/certbot/www:/var/www/certbot:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
     depends_on:
       - frontend
       - backend
@@ -77,8 +77,8 @@ services:
     image: docker.io/certbot/certbot
     container_name: todolist-certbot
     volumes:
-      - ./deployment/certbot/conf:/etc/letsencrypt
-      - ./deployment/certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
