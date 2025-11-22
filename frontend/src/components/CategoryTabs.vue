@@ -156,14 +156,14 @@ export default {
 </script>
 
 <style scoped>
-/* Desktop Tabs */
+/* Desktop Tabs - Compact */
 .category-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 15px;
+  gap: 6px;
+  padding: 8px 12px;
   background: #f7fafc;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
   overflow-x: auto;
   align-items: center;
 }
@@ -172,56 +172,56 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 50px;
-  min-height: 50px;
-  padding: 8px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 6px;
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   border: 2px solid transparent;
 }
 
 .category-tab:hover {
   background: #edf2f7;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .category-tab.active {
   background: #667eea;
   border-color: #5568d3;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .tab-emoji {
-  font-size: 28px;
+  font-size: 22px;
   line-height: 1;
   user-select: none;
 }
 
 .category-actions {
   margin-left: auto;
-  padding-left: 12px;
-  border-left: 2px solid #e2e8f0;
+  padding-left: 8px;
+  border-left: 1px solid #e2e8f0;
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .btn-action {
   padding: 6px 10px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   background: white;
-  border: 2px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
 }
 
 .btn-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .btn-edit-category:hover {
@@ -234,29 +234,29 @@ export default {
   border-color: #fc8181;
 }
 
-/* Description Bar */
+/* Description Bar - Compact */
 .category-description-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 15px;
+  gap: 10px;
+  padding: 6px 12px;
   background: #f7fafc;
   border-bottom: 1px solid #e2e8f0;
-  font-size: 13px;
+  font-size: 12px;
   color: #4a5568;
 }
 
 .description-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex: 1;
   min-width: 0;
 }
 
 .description-icon {
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
@@ -272,8 +272,8 @@ export default {
   border: none;
   color: #a0aec0;
   cursor: pointer;
-  font-size: 14px;
-  padding: 2px 6px;
+  font-size: 13px;
+  padding: 2px 4px;
   transition: color 0.2s;
   flex-shrink: 0;
 }
@@ -283,7 +283,7 @@ export default {
 }
 
 .show-description-bar {
-  padding: 6px 15px;
+  padding: 4px 12px;
   background: #f7fafc;
   border-bottom: 1px solid #e2e8f0;
 }
@@ -293,9 +293,9 @@ export default {
   border: 1px solid #e2e8f0;
   color: #718096;
   cursor: pointer;
-  font-size: 12px;
-  padding: 4px 10px;
-  border-radius: 6px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 5px;
   transition: all 0.2s;
 }
 
@@ -307,24 +307,24 @@ export default {
 
 @media (max-width: 768px) {
   .category-tabs {
-    gap: 10px;
-    padding: 12px;
+    gap: 8px;
+    padding: 10px;
   }
 
   .category-tab {
-    min-width: 56px;
-    min-height: 56px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .tab-emoji {
-    font-size: 32px;
+    font-size: 26px;
   }
 
   .btn-action {
-    padding: 10px 14px;
-    font-size: 20px;
-    min-width: 50px;
-    min-height: 50px;
+    padding: 8px 12px;
+    font-size: 18px;
+    min-width: 44px;
+    min-height: 44px;
   }
 
   .category-actions {

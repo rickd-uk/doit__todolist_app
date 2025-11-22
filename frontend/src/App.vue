@@ -1,13 +1,21 @@
 <template>
   <div id="app" class="app-container">
-    <header class="app-header">
-      <h1>📝 Doit</h1>
-      <button @click="showNewCategoryModal = true" class="btn btn-primary">
-        ➕ Category
-      </button>
-    </header>
-
     <div class="app-content">
+      <div class="compact-header">
+        <button
+          @click="showNewCategoryModal = true"
+          class="btn btn-primary btn-compact"
+        >
+          ➕ 📂
+        </button>
+        <button
+          @click="showNewTodoModal = true"
+          class="btn btn-success btn-compact"
+        >
+          ➕ ✓
+        </button>
+      </div>
+
       <CategoryTabs
         :categories="categories"
         :activeCategory="activeCategory"
@@ -18,12 +26,6 @@
       />
 
       <div class="main-content">
-        <div class="toolbar">
-          <button @click="showNewTodoModal = true" class="btn btn-success">
-            ➕ Todo
-          </button>
-        </div>
-
         <TodoList
           :todos="filteredTodos"
           :activeCategory="activeCategory"
@@ -211,7 +213,6 @@ export default {
 
       try {
         if (alsoDeleteTodos) {
-          // Delete all todos in this category first
           const todosInCategory = allTodos.value.filter(
             (todo) => todo.categoryId === deletingCategory.value.id,
           );
@@ -221,7 +222,6 @@ export default {
           }
         }
 
-        // Then delete the category
         await store.dispatch("deleteCategory", deletingCategory.value.id);
 
         showDeleteCategoryModal.value = false;
@@ -311,3 +311,19 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.compact-header {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #f7fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.btn-compact {
+  padding: 6px 12px;
+  font-size: 16px;
+  min-height: 32px;
+}
+</style>
