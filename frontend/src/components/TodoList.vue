@@ -29,7 +29,7 @@
                   @click="$emit('editTodo', todo)"
                   title="Edit todo"
                 >
-                  ✏️
+                  📝
                 </button>
                 <button
                   class="btn-icon btn-delete"
@@ -134,7 +134,7 @@
 
           <div class="detail-actions">
             <button @click="editFromView" class="btn btn-primary">
-              ✏️ Edit
+              📝 Edit
             </button>
             <button @click="closeViewModal" class="btn btn-secondary">
               ✖ Close

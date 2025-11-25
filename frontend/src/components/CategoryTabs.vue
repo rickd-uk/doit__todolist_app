@@ -42,14 +42,16 @@
           @click="editCategory(activeCategory)"
           title="Edit category"
         >
-          ✏️
+          <span class="action-icon">⚙️</span>
+          <span class="action-label">Edit</span>
         </button>
         <button
           class="btn-action btn-delete-category"
           @click="deleteCategory(activeCategory)"
           title="Delete category"
         >
-          🗑️
+          <span class="action-icon">❌</span>
+          <span class="action-label">Delete</span>
         </button>
       </div>
     </div>
@@ -203,20 +205,34 @@ export default {
 .category-actions {
   margin-left: auto;
   padding-left: 8px;
-  border-left: 1px solid #e2e8f0;
+  border-left: 2px solid #cbd5e0;
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 
 .btn-action {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 6px 10px;
   border: none;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
+  color: #4a5568;
+}
+
+.action-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.action-label {
+  display: inline;
 }
 
 .btn-action:hover {
@@ -227,11 +243,13 @@ export default {
 .btn-edit-category:hover {
   background: #667eea;
   border-color: #667eea;
+  color: white;
 }
 
 .btn-delete-category:hover {
   background: #fc8181;
   border-color: #fc8181;
+  color: white;
 }
 
 /* Description Bar - Compact */
@@ -320,17 +338,32 @@ export default {
     font-size: 26px;
   }
 
-  .btn-action {
-    padding: 8px 12px;
-    font-size: 18px;
-    min-width: 44px;
-    min-height: 44px;
-  }
-
   .category-actions {
+    width: 100%;
     margin-left: 0;
     padding-left: 0;
+    padding-top: 8px;
     border-left: none;
+    border-top: 2px solid #cbd5e0;
+    justify-content: center;
+  }
+
+  .btn-action {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 14px;
+    min-height: 44px;
+    border-width: 2px;
+  }
+
+  .action-icon {
+    font-size: 18px;
+  }
+
+  .action-label {
+    display: inline;
+    font-weight: 600;
   }
 }
 </style>
