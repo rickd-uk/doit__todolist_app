@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Database Backup Script for Development
+# 
+# SETUP:
+# 1. Copy this file: cp scripts/templates/db-backup-dev.sh.template scripts/db-backup-dev.sh
+# 2. Edit scripts/db-backup-dev.sh and update the credentials
+# 3. Make executable: chmod +x scripts/db-backup-dev.sh
+
+set -e
+
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Configuration - UPDATE THESE VALUES
+BACKUP_DIR="./db-backups"
+DB_NAME="doit_db"                    # Update if different
+DB_USER="doit_user"                  # Update if different
+DB_PASSWORD="YOUR_PASSWORD_HERE"     # ⚠️ REQUIRED: Set your password
+CONTAINER_NAME="doit-dev-postgres"   # Update if different
+
+# Check if container is running
+if ! podman ps | grep -q "$CONTAINER_NAME"; then
+    echo -e "${RED}Error: Container $CONTAINER_NAME is not running${NC}"
+    echo "Start it with: podman-compose -f docker-compose.dev.yml up -d"
+    exit 1
+fi
+
+# Create backup directory if it doesn't exist
+mkdir -p "$BACKUP_DIR"
+
+# Generate timestamp
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILE="$BACKUP_DIR/doit_dev_backup_$TIMESTAMP.sql"
+
+echo -e "${YELLOW}🔄 Starting development database backup...${NC}"
+
+# Create backup using podman exec
+podman exec "$CONTAINER_NAME" pg_dump -U "$DB_USER" "$DB_NAME" > "$BACKUP_FILE"
+
+if [ $? -eq 0 ]; then
+    # Compress the backup
+    gzip "$BACKUP_FILE"
+    BACKUP_FILE="${BACKUP_FILE}.gz"
+    
+    # Get file size
+    SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
+    
+    echo -e "${GREEN}✓ Backup completed successfully!${NC}"
+    echo -e "${GREEN}  File: $BACKUP_FILE${NC}"
+    echo -e "${GREEN}  Size: $SIZE${NC}"
+    
+    # Keep only last 10 backups
+    echo -e "${YELLOW}🧹 Cleaning old backups (keeping last 10)...${NC}"
+    cd "$BACKUP_DIR"
+    ls -t doit_dev_backup_*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm
+    REMAINING=$(ls -1 doit_dev_backup_*.sql.gz 2>/dev/null | wc -l)
+    echo -e "${GREEN}✓ Kept $REMAINING backup(s)${NC}"
+else
+    echo -e "${RED}✗ Backup failed!${NC}"
+    exit 1
+fi

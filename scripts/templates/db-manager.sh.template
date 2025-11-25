@@ -1,0 +1,315 @@
+#!/bin/bash
+
+# Database Management Tool
+#
+# SETUP:
+# 1. Copy this file: cp scripts/templates/db-manager.sh.template scripts/db-manager.sh
+# 2. Make sure all other db-*.sh scripts are set up first
+# 3. Make executable: chmod +x scripts/db-manager.sh
+
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+BACKUP_DIR="./db-backups"
+SCRIPT_DIR="./scripts"
+
+show_banner() {
+  clear
+  echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${BLUE}   📊 Doit Database Management Tool${NC}"
+  echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo ""
+}
+
+show_menu() {
+  echo -e "${CYAN}Development Database:${NC}"
+  echo "  1) Backup development database"
+  echo "  2) Restore from backup (replace all data)"
+  echo "  3) Merge backup into development (keep existing data)"
+  echo ""
+  echo -e "${CYAN}Production Database:${NC}"
+  echo "  4) Download production database"
+  echo "  5) List available backups"
+  echo ""
+  echo -e "${CYAN}Other:${NC}"
+  echo "  6) View database statistics"
+  echo "  7) Clean old backups"
+  echo "  0) Exit"
+  echo ""
+}
+
+list_backups() {
+  echo -e "${YELLOW}📦 Available backups:${NC}"
+  echo ""
+
+  if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR/*.sql.gz 2>/dev/null)" ]; then
+    echo -e "${RED}No backups found in $BACKUP_DIR${NC}"
+    return
+  fi
+
+  echo -e "${BLUE}#${NC}  ${BLUE}Date/Time${NC}           ${BLUE}Type${NC}    ${BLUE}Size${NC}"
+  echo "─────────────────────────────────────────────────"
+
+  i=1
+  for file in $(ls -t $BACKUP_DIR/*.sql.gz 2>/dev/null); do
+    filename=$(basename "$file")
+    size=$(du -h "$file" | cut -f1)
+
+    # Extract timestamp from filename
+    if [[ $filename =~ doit_dev_backup_([0-9_]+).sql.gz ]]; then
+      timestamp="${BASH_REMATCH[1]}"
+      type="DEV "
+    elif [[ $filename =~ doit_backup_([0-9_]+).sql.gz ]]; then
+      timestamp="${BASH_REMATCH[1]}"
+      type="PROD"
+    else
+      timestamp="unknown"
+      type="????"
+    fi
+
+    # Format timestamp
+    if [ "$timestamp" != "unknown" ]; then
+      date_part="${timestamp:0:8}"
+      time_part="${timestamp:9:6}"
+      formatted="${date_part:0:4}-${date_part:4:2}-${date_part:6:2} ${time_part:0:2}:${time_part:2:2}:${time_part:4:2}"
+    else
+      formatted="unknown"
+    fi
+
+    printf "${GREEN}%-3d${NC} %-19s ${YELLOW}%-7s${NC} %s\n" "$i" "$formatted" "$type" "$size"
+    i=$((i + 1))
+  done
+  echo ""
+}
+
+select_backup() {
+  list_backups
+
+  if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR/*.sql.gz 2>/dev/null)" ]; then
+    return 1
+  fi
+
+  echo -e -n "${YELLOW}Enter backup number (or 0 to cancel): ${NC}"
+  read backup_num
+
+  if [ "$backup_num" == "0" ]; then
+    return 1
+  fi
+
+  # Get the selected file
+  selected_file=$(ls -t $BACKUP_DIR/*.sql.gz 2>/dev/null | sed -n "${backup_num}p")
+
+  if [ -z "$selected_file" ]; then
+    echo -e "${RED}Invalid selection${NC}"
+    sleep 2
+    return 1
+  fi
+
+  echo "$selected_file"
+  return 0
+}
+
+backup_dev() {
+  show_banner
+  echo -e "${YELLOW}🔄 Backing up development database...${NC}"
+  $SCRIPT_DIR/db-backup-dev.sh
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+restore_replace() {
+  show_banner
+  backup_file=$(select_backup)
+
+  if [ $? -ne 0 ] || [ -z "$backup_file" ]; then
+    return
+  fi
+
+  echo ""
+  $SCRIPT_DIR/db-restore.sh "$backup_file" --replace
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+restore_merge() {
+  show_banner
+  backup_file=$(select_backup)
+
+  if [ $? -ne 0 ] || [ -z "$backup_file" ]; then
+    return
+  fi
+
+  echo ""
+  $SCRIPT_DIR/db-restore.sh "$backup_file" --merge
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+download_prod() {
+  show_banner
+  echo -e "${YELLOW}📥 Downloading production database...${NC}"
+  echo ""
+  $SCRIPT_DIR/db-download.sh
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+view_stats() {
+  show_banner
+  echo -e "${YELLOW}📊 Database Statistics${NC}"
+  echo ""
+
+  # Check if container is running
+  if ! podman ps | grep -q "doit-dev-postgres"; then
+    echo -e "${RED}Development database is not running${NC}"
+    echo ""
+    echo -e "${GREEN}Press Enter to continue...${NC}"
+    read
+    return
+  fi
+
+  echo -e "${BLUE}Development Database:${NC}"
+  echo "─────────────────────────────────────────"
+
+  categories=$(podman exec doit-dev-postgres psql -U doit_user -d doit_db -t -c "SELECT COUNT(*) FROM categories;" 2>/dev/null | xargs)
+  todos=$(podman exec doit-dev-postgres psql -U doit_user -d doit_db -t -c "SELECT COUNT(*) FROM todos;" 2>/dev/null | xargs)
+  todos_completed=$(podman exec doit-dev-postgres psql -U doit_user -d doit_db -t -c "SELECT COUNT(*) FROM todos WHERE completed = true;" 2>/dev/null | xargs)
+
+  echo -e "Categories:       ${GREEN}$categories${NC}"
+  echo -e "Total Todos:      ${GREEN}$todos${NC}"
+  echo -e "Completed Todos:  ${GREEN}$todos_completed${NC}"
+
+  if [ "$todos" -gt 0 ]; then
+    completed_pct=$((100 * todos_completed / todos))
+    echo -e "Completion Rate:  ${GREEN}${completed_pct}%${NC}"
+  fi
+
+  echo ""
+
+  # Show top categories
+  echo -e "${BLUE}Top Categories by Todo Count:${NC}"
+  echo "─────────────────────────────────────────"
+  podman exec doit-dev-postgres psql -U doit_user -d doit_db -t -c \
+    "SELECT c.name, COUNT(t.id) as todo_count FROM categories c LEFT JOIN todos t ON c.id = t.\"categoryId\" GROUP BY c.name ORDER BY todo_count DESC LIMIT 5;" 2>/dev/null |
+    while IFS='|' read -r name count; do
+      name=$(echo "$name" | xargs)
+      count=$(echo "$count" | xargs)
+      echo -e "  ${YELLOW}$name${NC}: $count todos"
+    done
+
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+clean_backups() {
+  show_banner
+  echo -e "${YELLOW}🧹 Clean Old Backups${NC}"
+  echo ""
+
+  if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR/*.sql.gz 2>/dev/null)" ]; then
+    echo -e "${RED}No backups found${NC}"
+    echo ""
+    echo -e "${GREEN}Press Enter to continue...${NC}"
+    read
+    return
+  fi
+
+  total=$(ls -1 $BACKUP_DIR/*.sql.gz 2>/dev/null | wc -l)
+  echo -e "Total backups: ${YELLOW}$total${NC}"
+  echo ""
+  echo "Options:"
+  echo "  1) Keep last 10 backups"
+  echo "  2) Keep last 5 backups"
+  echo "  3) Keep last 3 backups"
+  echo "  4) Delete all backups"
+  echo "  0) Cancel"
+  echo ""
+  echo -e -n "${YELLOW}Choose option: ${NC}"
+  read option
+
+  case $option in
+  1) keep=10 ;;
+  2) keep=5 ;;
+  3) keep=3 ;;
+  4) keep=0 ;;
+  0) return ;;
+  *)
+    echo -e "${RED}Invalid option${NC}"
+    sleep 2
+    return
+    ;;
+  esac
+
+  echo ""
+  if [ $keep -eq 0 ]; then
+    echo -e "${RED}⚠️  WARNING: This will delete ALL backups!${NC}"
+  else
+    echo -e "${YELLOW}This will keep the $keep most recent backups and delete the rest.${NC}"
+  fi
+  echo -e -n "${YELLOW}Continue? (yes/no): ${NC}"
+  read confirm
+
+  if [ "$confirm" != "yes" ]; then
+    echo "Cancelled"
+    sleep 1
+    return
+  fi
+
+  cd "$BACKUP_DIR"
+  if [ $keep -eq 0 ]; then
+    rm -f *.sql.gz
+    deleted=$total
+  else
+    ls -t *.sql.gz | tail -n +$((keep + 1)) | xargs -r rm
+    deleted=$((total - $(ls -1 *.sql.gz 2>/dev/null | wc -l)))
+  fi
+
+  echo -e "${GREEN}✓ Deleted $deleted backup(s)${NC}"
+  remaining=$(ls -1 *.sql.gz 2>/dev/null | wc -l)
+  echo -e "${GREEN}  Remaining: $remaining backup(s)${NC}"
+  echo ""
+  echo -e "${GREEN}Press Enter to continue...${NC}"
+  read
+}
+
+# Main loop
+while true; do
+  show_banner
+  show_menu
+  echo -e -n "${YELLOW}Select option: ${NC}"
+  read choice
+
+  case $choice in
+  1) backup_dev ;;
+  2) restore_replace ;;
+  3) restore_merge ;;
+  4) download_prod ;;
+  5)
+    show_banner
+    list_backups
+    echo -e "${GREEN}Press Enter to continue...${NC}"
+    read
+    ;;
+  6) view_stats ;;
+  7) clean_backups ;;
+  0)
+    echo -e "${GREEN}Goodbye!${NC}"
+    exit 0
+    ;;
+  *)
+    echo -e "${RED}Invalid option${NC}"
+    sleep 1
+    ;;
+  esac
+done

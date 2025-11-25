@@ -1,0 +1,74 @@
+#!/bin/bash
+
+# Download Production Database to Local Machine
+# 
+# SETUP:
+# 1. Copy this file: cp scripts/templates/db-download.sh.template scripts/db-download.sh
+# 2. Edit scripts/db-download.sh and update SSH settings
+# 3. Make executable: chmod +x scripts/db-download.sh
+
+set -e
+
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Configuration - UPDATE THESE FOR YOUR SETUP
+SERVER_USER="YOUR_SSH_USERNAME"           # ⚠️ REQUIRED: Your SSH username
+SERVER_HOST="doit.futureisnear.dev"       # Update if different
+SERVER_PATH="/root/deployment"             # ⚠️ REQUIRED: Path on server
+LOCAL_BACKUP_DIR="./db-backups"
+
+# Create local backup directory
+mkdir -p "$LOCAL_BACKUP_DIR"
+
+echo -e "${YELLOW}🔄 Downloading production database...${NC}"
+echo ""
+echo "This will:"
+echo "1. Create a fresh backup on the production server"
+echo "2. Download it to your local machine"
+echo ""
+read -p "Continue? (yes/no): " CONFIRM
+
+if [ "$CONFIRM" != "yes" ]; then
+    echo "Cancelled."
+    exit 0
+fi
+
+# Generate timestamp
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+BACKUP_FILE="doit_backup_$TIMESTAMP.sql.gz"
+
+echo -e "${YELLOW}📦 Creating backup on server...${NC}"
+
+# SSH into server and create backup
+ssh "$SERVER_USER@$SERVER_HOST" << EOF
+    cd $SERVER_PATH
+    mkdir -p db-backups
+    podman exec todolist-postgres pg_dump -U doit_user doit_db | gzip > db-backups/$BACKUP_FILE
+    echo "Backup created: db-backups/$BACKUP_FILE"
+EOF
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}✗ Failed to create backup on server${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}⬇️  Downloading backup...${NC}"
+
+# Download the backup
+scp "$SERVER_USER@$SERVER_HOST:$SERVER_PATH/db-backups/$BACKUP_FILE" "$LOCAL_BACKUP_DIR/"
+
+if [ $? -eq 0 ]; then
+    SIZE=$(du -h "$LOCAL_BACKUP_DIR/$BACKUP_FILE" | cut -f1)
+    echo -e "${GREEN}✓ Download completed!${NC}"
+    echo -e "${GREEN}  File: $LOCAL_BACKUP_DIR/$BACKUP_FILE${NC}"
+    echo -e "${GREEN}  Size: $SIZE${NC}"
+    echo ""
+    echo -e "${YELLOW}💡 Next steps:${NC}"
+    echo "  To restore to dev: ./scripts/db-restore.sh $LOCAL_BACKUP_DIR/$BACKUP_FILE"
+else
+    echo -e "${RED}✗ Download failed!${NC}"
+    exit 1
+fi
