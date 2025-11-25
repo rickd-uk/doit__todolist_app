@@ -1,4 +1,20 @@
-backend/.env
-backend/.env.example
-node_modules
+# Node modules
+node_modules/
 
+# Environment files (contain credentials)
+backend/.env
+deployment/.env
+.env
+.env.local
+.env.*.local
+
+# BUT allow .example files (templates)
+!**/.env.example
+
+# Database backups (contain sensitive data)
+db-backups/
+*.sql
+*.sql.gz
+
+# Database scripts (contain passwords)
+scripts/db-*.sh
