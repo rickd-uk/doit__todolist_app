@@ -12,18 +12,13 @@
           required
           class="form-control emoji-select"
         >
-          <option value="🛒">🛒 Shopping</option>
-          <option value="💊">💊 Health</option>
-          <option value="📚">📚 Teaching</option>
-          <option value="💻">💻 Programming</option>
-          <option value="👥">👥 People</option>
-          <option value="💰">💰 Money</option>
-          <option value="💡">💡 Ideas</option>
-          <option value="🏃">🏃 Exercise</option>
-          <option value="🏠">🏠 Home</option>
-          <option value="📞">📞 Calls</option>
-          <option value="✈️">✈️ Travel</option>
-          <option value="🎯">🎯 Goals</option>
+          <option
+            v-for="emoji in availableEmojis"
+            :key="emoji.icon"
+            :value="emoji.icon"
+          >
+            {{ emoji.icon }} {{ emoji.name }}
+          </option>
         </select>
       </div>
 
@@ -32,11 +27,16 @@
         <input
           id="name"
           v-model="formData.name"
+          @input="checkCategoryNameExists"
           type="text"
           required
           placeholder="Enter category name"
           class="form-control"
+          :class="{ 'input-error': categoryNameError }"
         />
+        <div v-if="categoryNameError" class="error-message">
+          {{ categoryNameError }}
+        </div>
       </div>
 
       <div class="form-group">
@@ -85,7 +85,11 @@
         >
           ✖ Cancel
         </button>
-        <button type="submit" class="btn btn-primary">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          :disabled="!!categoryNameError || !formData.name.trim()"
+        >
           {{ isEditing ? "💾 Update" : "➕ Create" }}
         </button>
       </div>
@@ -103,26 +107,46 @@ export default {
       type: Object,
       default: null,
     },
+    categories: {
+      type: Array,
+      required: true,
+    },
   },
   emits: ["submit", "cancel"],
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.category);
+    const categoryNameError = ref("");
 
-    // Emoji to name mapping
-    const emojiNameMap = {
-      "🛒": "Shopping",
-      "💊": "Health",
-      "📚": "Teaching",
-      "💻": "Programming",
-      "👥": "People",
-      "💰": "Money",
-      "💡": "Ideas",
-      "🏃": "Exercise",
-      "🏠": "Home",
-      "📞": "Calls",
-      "✈️": "Travel",
-      "🎯": "Goals",
-    };
+    // All available emojis with their default names
+    const allEmojis = [
+      { icon: "🛒", name: "Shopping" },
+      { icon: "💊", name: "Health" },
+      { icon: "📚", name: "Teaching" },
+      { icon: "💻", name: "Programming" },
+      { icon: "👥", name: "People" },
+      { icon: "💰", name: "Money" },
+      { icon: "💡", name: "Ideas" },
+      { icon: "🏃", name: "Exercise" },
+      { icon: "🏠", name: "Home" },
+      { icon: "📞", name: "Calls" },
+      { icon: "✈️", name: "Travel" },
+      { icon: "🎯", name: "Goals" },
+    ];
+
+    // Filter out emojis already used by other categories
+    const availableEmojis = computed(() => {
+      const usedEmojis = props.categories
+        .filter((cat) => {
+          // When editing, exclude current category
+          if (isEditing.value && props.category) {
+            return cat.id !== props.category.id;
+          }
+          return true;
+        })
+        .map((cat) => cat.emoji);
+
+      return allEmojis.filter((emoji) => !usedEmojis.includes(emoji.icon));
+    });
 
     const generateRandomColor = () => {
       return (
@@ -133,19 +157,62 @@ export default {
       );
     };
 
+    // Get first available emoji for new categories
+    const getInitialEmoji = () => {
+      if (props.category) {
+        return props.category.emoji;
+      }
+      return availableEmojis.value.length > 0
+        ? availableEmojis.value[0].icon
+        : "🛒";
+    };
+
+    const getInitialName = () => {
+      if (props.category) {
+        return props.category.name;
+      }
+      return availableEmojis.value.length > 0
+        ? availableEmojis.value[0].name
+        : "";
+    };
+
     const formData = ref({
-      emoji: props.category?.emoji || "🛒",
-      name: props.category?.name || "Shopping",
+      emoji: getInitialEmoji(),
+      name: getInitialName(),
       description: props.category?.description || "",
       color: props.category?.color || generateRandomColor(),
     });
 
+    const checkCategoryNameExists = () => {
+      const name = formData.value.name.trim();
+      if (!name) {
+        categoryNameError.value = "";
+        return;
+      }
+
+      // When editing, exclude the current category from the check
+      const exists = props.categories.some(
+        (cat) =>
+          cat.name.toLowerCase() === name.toLowerCase() &&
+          (!isEditing.value || cat.id !== props.category.id),
+      );
+
+      if (exists) {
+        categoryNameError.value = `Category "${name}" already exists`;
+      } else {
+        categoryNameError.value = "";
+      }
+    };
+
     const updateNameFromEmoji = () => {
-      // Only update name if we're creating a new category (not editing)
+      // Only auto-update name if we're creating a new category (not editing)
+      // and only suggest the default name - user can still change it
       if (!isEditing.value) {
         const selectedEmoji = formData.value.emoji;
-        if (emojiNameMap[selectedEmoji]) {
-          formData.value.name = emojiNameMap[selectedEmoji];
+        const emojiData = allEmojis.find((e) => e.icon === selectedEmoji);
+        if (emojiData) {
+          formData.value.name = emojiData.name;
+          checkCategoryNameExists();
         }
       }
     };
@@ -155,9 +222,13 @@ export default {
     };
 
     const handleSubmit = () => {
+      if (categoryNameError.value || !formData.value.name.trim()) {
+        return;
+      }
+
       const submitData = {
         emoji: formData.value.emoji,
-        name: formData.value.name,
+        name: formData.value.name.trim(),
         description: formData.value.description || null,
         color: formData.value.color,
       };
@@ -168,9 +239,12 @@ export default {
     return {
       isEditing,
       formData,
+      categoryNameError,
+      availableEmojis,
       randomizeColor,
       handleSubmit,
       updateNameFromEmoji,
+      checkCategoryNameExists,
     };
   },
 };
@@ -185,6 +259,17 @@ export default {
 .form-control-textarea {
   resize: none;
   font-family: inherit;
+}
+
+.input-error {
+  border-color: #fc8181 !important;
+}
+
+.error-message {
+  color: #fc8181;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
 }
 
 .color-input-group {
@@ -209,4 +294,16 @@ export default {
 .color-input-group .btn {
   white-space: nowrap;
 }
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 </style>
+``` Key changes: 1. **Filter out used emojis**: The `availableEmojis` computed
+property now filters based on emoji icon (not name), so already-used emojis
+won't appear in the dropdown 2. **Allow custom names**: Users can now type any
+name they want - the auto-fill from emoji is just a suggestion that can be
+changed 3. **Better validation**: Button is disabled only when there's a
+duplicate name error OR the name field is empty Save to: ```
+/home/claude/frontend/src/components/CategoryForm.vue

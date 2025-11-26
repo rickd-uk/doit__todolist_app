@@ -64,6 +64,7 @@
       <CategoryForm
         @submit="createCategory"
         @cancel="showNewCategoryModal = false"
+        :categories="categories"
       />
     </Modal>
 
@@ -73,6 +74,7 @@
         :category="editingCategory"
         @submit="updateCategory"
         @cancel="showEditCategoryModal = false"
+        :categories="categories"
       />
     </Modal>
 

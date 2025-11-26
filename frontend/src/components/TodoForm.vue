@@ -35,7 +35,7 @@
             class="form-control"
             :disabled="showNewCategoryForm"
           >
-            <option :value="null">Inbox</option>
+            <option :value="null">📥 Inbox</option>
             <option
               v-for="category in filteredCategories"
               :key="category.id"
@@ -66,18 +66,13 @@
               required
               class="form-control emoji-select"
             >
-              <option value="🛒">🛒 Shopping</option>
-              <option value="💊">💊 Health</option>
-              <option value="📚">📚 Teaching</option>
-              <option value="💻">💻 Programming</option>
-              <option value="👥">👥 People</option>
-              <option value="💰">💰 Money</option>
-              <option value="💡">💡 Ideas</option>
-              <option value="🏃">🏃 Exercise</option>
-              <option value="🏠">🏠 Home</option>
-              <option value="📞">📞 Calls</option>
-              <option value="✈️">✈️ Travel</option>
-              <option value="🎯">🎯 Goals</option>
+              <option
+                v-for="emoji in availableEmojis"
+                :key="emoji.icon"
+                :value="emoji.icon"
+              >
+                {{ emoji.icon }} {{ emoji.name }}
+              </option>
             </select>
           </div>
 
@@ -86,11 +81,16 @@
             <input
               id="newCategoryName"
               v-model="newCategory.name"
+              @input="checkCategoryNameExists"
               type="text"
               required
               placeholder="Enter category name"
               class="form-control"
+              :class="{ 'input-error': categoryNameError }"
             />
+            <div v-if="categoryNameError" class="error-message">
+              {{ categoryNameError }}
+            </div>
           </div>
 
           <div class="form-group">
@@ -128,7 +128,7 @@
             type="button"
             @click="createNewCategory"
             class="btn btn-success btn-full"
-            :disabled="!newCategory.name"
+            :disabled="!newCategory.name || categoryNameError"
           >
             ✅ Create Category
           </button>
@@ -210,6 +210,23 @@ export default {
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.todo);
     const showNewCategoryForm = ref(false);
+    const categoryNameError = ref("");
+
+    // All available emojis with their names
+    const allEmojis = [
+      { icon: "🛒", name: "Shopping" },
+      { icon: "💊", name: "Health" },
+      { icon: "📚", name: "Teaching" },
+      { icon: "💻", name: "Programming" },
+      { icon: "👥", name: "People" },
+      { icon: "💰", name: "Money" },
+      { icon: "💡", name: "Ideas" },
+      { icon: "🏃", name: "Exercise" },
+      { icon: "🏠", name: "Home" },
+      { icon: "📞", name: "Calls" },
+      { icon: "✈️", name: "Travel" },
+      { icon: "🎯", name: "Goals" },
+    ];
 
     // Emoji to name mapping
     const emojiNameMap = {
@@ -226,6 +243,16 @@ export default {
       "✈️": "Travel",
       "🎯": "Goals",
     };
+
+    // Filter out emojis whose categories already exist
+    const availableEmojis = computed(() => {
+      const existingNames = props.categories.map((cat) =>
+        cat.name.toLowerCase(),
+      );
+      return allEmojis.filter(
+        (emoji) => !existingNames.includes(emoji.name.toLowerCase()),
+      );
+    });
 
     // Generate today's date in YYYY-MM-DD format
     const getTodayDate = () => {
@@ -262,9 +289,16 @@ export default {
       );
     };
 
+    // Initialize with first available emoji
+    const getInitialEmoji = () => {
+      return availableEmojis.value.length > 0
+        ? availableEmojis.value[0]
+        : allEmojis[0];
+    };
+
     const newCategory = ref({
-      emoji: "🛒",
-      name: "Shopping",
+      emoji: "",
+      name: "",
       description: "",
       color: generateRandomColor(),
     });
@@ -273,22 +307,43 @@ export default {
       return props.categories.filter((cat) => cat.name !== "Inbox");
     });
 
+    const checkCategoryNameExists = () => {
+      const name = newCategory.value.name.trim();
+      if (!name) {
+        categoryNameError.value = "";
+        return;
+      }
+
+      const exists = props.categories.some(
+        (cat) => cat.name.toLowerCase() === name.toLowerCase(),
+      );
+
+      if (exists) {
+        categoryNameError.value = `Category "${name}" already exists`;
+      } else {
+        categoryNameError.value = "";
+      }
+    };
+
     const updateCategoryNameFromEmoji = () => {
       const selectedEmoji = newCategory.value.emoji;
       if (emojiNameMap[selectedEmoji]) {
         newCategory.value.name = emojiNameMap[selectedEmoji];
+        checkCategoryNameExists();
       }
     };
 
     const toggleNewCategoryForm = () => {
       showNewCategoryForm.value = !showNewCategoryForm.value;
       if (showNewCategoryForm.value) {
+        const initialEmoji = getInitialEmoji();
         newCategory.value = {
-          emoji: "🛒",
-          name: "Shopping",
+          emoji: initialEmoji.icon,
+          name: initialEmoji.name,
           description: "",
           color: generateRandomColor(),
         };
+        categoryNameError.value = "";
       }
     };
 
@@ -316,7 +371,7 @@ export default {
     };
 
     const createNewCategory = async () => {
-      if (!newCategory.value.name) return;
+      if (!newCategory.value.name || categoryNameError.value) return;
 
       try {
         emit("createCategory", {
@@ -357,12 +412,15 @@ export default {
       filteredCategories,
       showNewCategoryForm,
       newCategory,
+      categoryNameError,
+      availableEmojis,
       toggleNewCategoryForm,
       randomizeNewCategoryColor,
       createNewCategory,
       setQuickDate,
       handleSubmit,
       updateCategoryNameFromEmoji,
+      checkCategoryNameExists,
     };
   },
 };
@@ -415,6 +473,17 @@ export default {
   font-family: inherit;
 }
 
+.input-error {
+  border-color: #fc8181 !important;
+}
+
+.error-message {
+  color: #fc8181;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
 .color-input-group-compact {
   display: flex;
   gap: 8px;
@@ -437,6 +506,11 @@ export default {
 
 .btn-full {
   width: 100%;
+}
+
+.btn-full:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .date-input-group {
