@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Database Restore Script
-# 
+#
 # SETUP:
 # 1. Copy this file: cp scripts/templates/db-restore.sh.template scripts/db-restore.sh
 # 2. Edit scripts/db-restore.sh and update credentials
@@ -16,24 +16,24 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuration - UPDATE THESE VALUES
-DB_NAME="doit_db"                    # Update if different
-DB_USER="doit_user"                  # Update if different
-DB_PASSWORD="YOUR_PASSWORD_HERE"     # ⚠️ REQUIRED: Set your password
-CONTAINER_NAME="doit-dev-postgres"   # Update if different
+DB_NAME="doit_db"                  # Update if different
+DB_USER="doit_user"                # Update if different
+DB_PASSWORD="YOUR_PASSWORD_HERE"   # ⚠️ REQUIRED: Set your password
+CONTAINER_NAME="doit-dev-postgres" # Update if different
 
 # Check if backup file is provided
 if [ -z "$1" ]; then
-    echo -e "${RED}Error: No backup file specified${NC}"
-    echo "Usage: $0 <backup-file.sql.gz> [--replace|--merge]"
-    echo ""
-    echo "Options:"
-    echo "  --replace  : Drop existing database and restore (default)"
-    echo "  --merge    : Keep existing data and add new data from backup"
-    echo ""
-    echo "Examples:"
-    echo "  $0 db-backups/doit_backup_20240101_120000.sql.gz"
-    echo "  $0 db-backups/doit_backup_20240101_120000.sql.gz --merge"
-    exit 1
+  echo -e "${RED}Error: No backup file specified${NC}"
+  echo "Usage: $0 <backup-file.sql.gz> [--replace|--merge]"
+  echo ""
+  echo "Options:"
+  echo "  --replace  : Drop existing database and restore (default)"
+  echo "  --merge    : Keep existing data and add new data from backup"
+  echo ""
+  echo "Examples:"
+  echo "  $0 db-backups/doit_backup_20240101_120000.sql.gz"
+  echo "  $0 db-backups/doit_backup_20240101_120000.sql.gz --merge"
+  exit 1
 fi
 
 BACKUP_FILE="$1"
@@ -41,15 +41,15 @@ MODE="${2:---replace}"
 
 # Check if backup file exists
 if [ ! -f "$BACKUP_FILE" ]; then
-    echo -e "${RED}Error: Backup file not found: $BACKUP_FILE${NC}"
-    exit 1
+  echo -e "${RED}Error: Backup file not found: $BACKUP_FILE${NC}"
+  exit 1
 fi
 
 # Check if container is running
 if ! podman ps | grep -q "$CONTAINER_NAME"; then
-    echo -e "${RED}Error: Container $CONTAINER_NAME is not running${NC}"
-    echo "Start it with: podman-compose -f docker-compose.dev.yml up -d"
-    exit 1
+  echo -e "${RED}Error: Container $CONTAINER_NAME is not running${NC}"
+  echo "Start it with: podman-compose -f docker-compose.dev.yml up -d"
+  exit 1
 fi
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -62,18 +62,18 @@ echo -e "Target DB: ${YELLOW}$DB_NAME${NC}"
 echo ""
 
 if [ "$MODE" == "--replace" ]; then
-    echo -e "${RED}⚠️  WARNING: This will DELETE all existing data!${NC}"
+  echo -e "${RED}⚠️  WARNING: This will DELETE all existing data!${NC}"
 else
-    echo -e "${YELLOW}ℹ️  This will merge backup data with existing data.${NC}"
-    echo -e "${YELLOW}   Conflicts will be skipped (existing data preserved).${NC}"
+  echo -e "${YELLOW}ℹ️  This will merge backup data with existing data.${NC}"
+  echo -e "${YELLOW}   Conflicts will be skipped (existing data preserved).${NC}"
 fi
 
 echo ""
 read -p "Continue? (yes/no): " CONFIRM
 
 if [ "$CONFIRM" != "yes" ]; then
-    echo "Cancelled."
-    exit 0
+  echo "Cancelled."
+  exit 0
 fi
 
 # Create temp directory for extraction
@@ -84,36 +84,36 @@ echo -e "${YELLOW}📦 Extracting backup...${NC}"
 
 # Extract the backup
 if [[ "$BACKUP_FILE" == *.gz ]]; then
-    gunzip -c "$BACKUP_FILE" > "$TEMP_DIR/backup.sql"
+  gunzip -c "$BACKUP_FILE" >"$TEMP_DIR/backup.sql"
 else
-    cp "$BACKUP_FILE" "$TEMP_DIR/backup.sql"
+  cp "$BACKUP_FILE" "$TEMP_DIR/backup.sql"
 fi
 
 if [ "$MODE" == "--replace" ]; then
-    echo -e "${YELLOW}🗑️  Dropping existing database...${NC}"
-    
-    # Terminate existing connections
-    podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c \
-        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();" \
-        2>/dev/null || true
-    
-    # Drop and recreate database
-    podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
-    podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c "CREATE DATABASE $DB_NAME;"
-    
-    echo -e "${YELLOW}📥 Restoring database...${NC}"
-    
-    # Restore the backup
-    podman exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_DIR/backup.sql" 2>&1 | grep -v "ERROR.*already exists" || true
-    
+  echo -e "${YELLOW}🗑️  Dropping existing database...${NC}"
+
+  # Terminate existing connections
+  podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c \
+    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '$DB_NAME' AND pid <> pg_backend_pid();" \
+    2>/dev/null || true
+
+  # Drop and recreate database
+  podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;" 2>/dev/null || true
+  podman exec "$CONTAINER_NAME" psql -U "$DB_USER" -d postgres -c "CREATE DATABASE $DB_NAME;"
+
+  echo -e "${YELLOW}📥 Restoring database...${NC}"
+
+  # Restore the backup
+  podman exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" <"$TEMP_DIR/backup.sql" 2>&1 | grep -v "ERROR.*already exists" || true
+
 else
-    echo -e "${YELLOW}🔀 Merging data...${NC}"
-    echo -e "${YELLOW}   Note: Duplicate entries will be skipped${NC}"
-    
-    # For merge mode, restore with errors suppressed for conflicts
-    podman exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" < "$TEMP_DIR/backup.sql" 2>&1 | \
-        grep -v "ERROR.*duplicate key" | \
-        grep -v "ERROR.*already exists" || true
+  echo -e "${YELLOW}🔀 Merging data...${NC}"
+  echo -e "${YELLOW}   Note: Duplicate entries will be skipped${NC}"
+
+  # For merge mode, restore with errors suppressed for conflicts
+  podman exec -i "$CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" <"$TEMP_DIR/backup.sql" 2>&1 |
+    grep -v "ERROR.*duplicate key" |
+    grep -v "ERROR.*already exists" || true
 fi
 
 # Verify the restore
