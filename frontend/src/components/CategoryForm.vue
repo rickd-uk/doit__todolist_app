@@ -8,6 +8,7 @@
         <select
           id="emoji"
           v-model="formData.emoji"
+          @change="updateNameFromEmoji"
           required
           class="form-control emoji-select"
         >
@@ -44,8 +45,8 @@
           id="description"
           v-model="formData.description"
           placeholder="Enter description (optional)"
-          class="form-control"
-          rows="3"
+          class="form-control form-control-textarea"
+          rows="4"
         ></textarea>
       </div>
 
@@ -107,6 +108,22 @@ export default {
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.category);
 
+    // Emoji to name mapping
+    const emojiNameMap = {
+      "🛒": "Shopping",
+      "💊": "Health",
+      "📚": "Teaching",
+      "💻": "Programming",
+      "👥": "People",
+      "💰": "Money",
+      "💡": "Ideas",
+      "🏃": "Exercise",
+      "🏠": "Home",
+      "📞": "Calls",
+      "✈️": "Travel",
+      "🎯": "Goals",
+    };
+
     const generateRandomColor = () => {
       return (
         "#" +
@@ -118,10 +135,20 @@ export default {
 
     const formData = ref({
       emoji: props.category?.emoji || "🛒",
-      name: props.category?.name || "",
+      name: props.category?.name || "Shopping",
       description: props.category?.description || "",
       color: props.category?.color || generateRandomColor(),
     });
+
+    const updateNameFromEmoji = () => {
+      // Only update name if we're creating a new category (not editing)
+      if (!isEditing.value) {
+        const selectedEmoji = formData.value.emoji;
+        if (emojiNameMap[selectedEmoji]) {
+          formData.value.name = emojiNameMap[selectedEmoji];
+        }
+      }
+    };
 
     const randomizeColor = () => {
       formData.value.color = generateRandomColor();
@@ -143,6 +170,7 @@ export default {
       formData,
       randomizeColor,
       handleSubmit,
+      updateNameFromEmoji,
     };
   },
 };
@@ -152,6 +180,11 @@ export default {
 .emoji-select {
   font-size: 18px;
   padding: 12px 14px;
+}
+
+.form-control-textarea {
+  resize: none;
+  font-family: inherit;
 }
 
 .color-input-group {

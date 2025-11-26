@@ -21,8 +21,8 @@
           id="description"
           v-model="formData.description"
           placeholder="Enter description (optional)"
-          class="form-control"
-          rows="3"
+          class="form-control form-control-textarea"
+          rows="4"
         ></textarea>
       </div>
 
@@ -41,7 +41,7 @@
               :key="category.id"
               :value="category.id"
             >
-              {{ category.name }}
+              {{ category.emoji }} {{ category.name }}
             </option>
           </select>
           <button
@@ -62,6 +62,7 @@
             <select
               id="newCategoryEmoji"
               v-model="newCategory.emoji"
+              @change="updateCategoryNameFromEmoji"
               required
               class="form-control emoji-select"
             >
@@ -81,13 +82,25 @@
           </div>
 
           <div class="form-group">
+            <label for="newCategoryName">Name *</label>
+            <input
+              id="newCategoryName"
+              v-model="newCategory.name"
+              type="text"
+              required
+              placeholder="Enter category name"
+              class="form-control"
+            />
+          </div>
+
+          <div class="form-group">
             <label for="newCategoryDescription">Description</label>
             <textarea
               id="newCategoryDescription"
               v-model="newCategory.description"
               placeholder="Enter description (optional)"
-              class="form-control"
-              rows="2"
+              class="form-control form-control-textarea"
+              rows="3"
             ></textarea>
           </div>
 
@@ -198,6 +211,22 @@ export default {
     const isEditing = computed(() => !!props.todo);
     const showNewCategoryForm = ref(false);
 
+    // Emoji to name mapping
+    const emojiNameMap = {
+      "🛒": "Shopping",
+      "💊": "Health",
+      "📚": "Teaching",
+      "💻": "Programming",
+      "👥": "People",
+      "💰": "Money",
+      "💡": "Ideas",
+      "🏃": "Exercise",
+      "🏠": "Home",
+      "📞": "Calls",
+      "✈️": "Travel",
+      "🎯": "Goals",
+    };
+
     // Generate today's date in YYYY-MM-DD format
     const getTodayDate = () => {
       const today = new Date();
@@ -235,20 +264,28 @@ export default {
 
     const newCategory = ref({
       emoji: "🛒",
-      name: "",
+      name: "Shopping",
       description: "",
       color: generateRandomColor(),
     });
 
     const filteredCategories = computed(() => {
-      return props.categories.filter((cat) => cat.name !== "Unspecified");
+      return props.categories.filter((cat) => cat.name !== "Inbox");
     });
+
+    const updateCategoryNameFromEmoji = () => {
+      const selectedEmoji = newCategory.value.emoji;
+      if (emojiNameMap[selectedEmoji]) {
+        newCategory.value.name = emojiNameMap[selectedEmoji];
+      }
+    };
 
     const toggleNewCategoryForm = () => {
       showNewCategoryForm.value = !showNewCategoryForm.value;
       if (showNewCategoryForm.value) {
         newCategory.value = {
-          name: "",
+          emoji: "🛒",
+          name: "Shopping",
           description: "",
           color: generateRandomColor(),
         };
@@ -283,6 +320,7 @@ export default {
 
       try {
         emit("createCategory", {
+          emoji: newCategory.value.emoji,
           name: newCategory.value.name,
           description: newCategory.value.description || null,
           color: newCategory.value.color,
@@ -324,6 +362,7 @@ export default {
       createNewCategory,
       setQuickDate,
       handleSubmit,
+      updateCategoryNameFromEmoji,
     };
   },
 };
@@ -369,6 +408,11 @@ export default {
 
 .new-category-form .form-group:last-of-type {
   margin-bottom: 12px;
+}
+
+.form-control-textarea {
+  resize: none;
+  font-family: inherit;
 }
 
 .color-input-group-compact {
@@ -425,6 +469,10 @@ export default {
   color: white;
   border-color: #667eea;
   transform: translateY(-1px);
+}
+
+.emoji-select {
+  font-size: 16px;
 }
 
 @media (max-width: 480px) {
