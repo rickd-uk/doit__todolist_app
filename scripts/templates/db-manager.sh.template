@@ -1,11 +1,7 @@
 #!/bin/bash
 
 # Database Management Tool
-#
-# SETUP:
-# 1. Copy this file: cp scripts/templates/db-manager.sh.template scripts/db-manager.sh
-# 2. Make sure all other db-*.sh scripts are set up first
-# 3. Make executable: chmod +x scripts/db-manager.sh
+# Easy-to-use menu for all database operations
 
 set -e
 
@@ -17,7 +13,6 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 BACKUP_DIR="./db-backups"
-SCRIPT_DIR="./scripts"
 
 show_banner() {
   clear
@@ -89,13 +84,13 @@ list_backups() {
 }
 
 select_backup() {
-  list_backups
+  list_backups >&2 # ← Add >&2 here to send output to stderr
 
   if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR/*.sql.gz 2>/dev/null)" ]; then
     return 1
   fi
 
-  echo -e -n "${YELLOW}Enter backup number (or 0 to cancel): ${NC}"
+  echo -e -n "${YELLOW}Enter backup number (or 0 to cancel): ${NC}" >&2
   read backup_num
 
   if [ "$backup_num" == "0" ]; then
@@ -106,7 +101,7 @@ select_backup() {
   selected_file=$(ls -t $BACKUP_DIR/*.sql.gz 2>/dev/null | sed -n "${backup_num}p")
 
   if [ -z "$selected_file" ]; then
-    echo -e "${RED}Invalid selection${NC}"
+    echo -e "${RED}Invalid selection${NC}" >&2
     sleep 2
     return 1
   fi
@@ -118,7 +113,7 @@ select_backup() {
 backup_dev() {
   show_banner
   echo -e "${YELLOW}🔄 Backing up development database...${NC}"
-  $SCRIPT_DIR/db-backup-dev.sh
+  ./scripts/db-backup-dev.sh
   echo ""
   echo -e "${GREEN}Press Enter to continue...${NC}"
   read
@@ -127,13 +122,17 @@ backup_dev() {
 restore_replace() {
   show_banner
   backup_file=$(select_backup)
-
   if [ $? -ne 0 ] || [ -z "$backup_file" ]; then
+    echo ""
+    echo -e "${RED}No backup selected or no backups available${NC}"
+    echo ""
+    echo -e "${GREEN}Press Enter to continue...${NC}"
+    read
     return
   fi
 
   echo ""
-  $SCRIPT_DIR/db-restore.sh "$backup_file" --replace
+  ./scripts/db-restore.sh "$backup_file" --replace
   echo ""
   echo -e "${GREEN}Press Enter to continue...${NC}"
   read
@@ -142,13 +141,17 @@ restore_replace() {
 restore_merge() {
   show_banner
   backup_file=$(select_backup)
-
   if [ $? -ne 0 ] || [ -z "$backup_file" ]; then
+    echo ""
+    echo -e "${RED}No backup selected or no backups available${NC}"
+    echo ""
+    echo -e "${GREEN}Press Enter to continue...${NC}"
+    read
     return
   fi
 
   echo ""
-  $SCRIPT_DIR/db-restore.sh "$backup_file" --merge
+  ./scripts/db-restore.sh "$backup_file" --merge
   echo ""
   echo -e "${GREEN}Press Enter to continue...${NC}"
   read
@@ -158,7 +161,7 @@ download_prod() {
   show_banner
   echo -e "${YELLOW}📥 Downloading production database...${NC}"
   echo ""
-  $SCRIPT_DIR/db-download.sh
+  ./scripts/db-download.sh
   echo ""
   echo -e "${GREEN}Press Enter to continue...${NC}"
   read

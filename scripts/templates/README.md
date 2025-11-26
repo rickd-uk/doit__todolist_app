@@ -1,38 +1,33 @@
-# Database Script Templates
+# Database Management Scripts
 
-These are template versions of the database management scripts with placeholders for passwords and configuration.
+## Setup
 
-## Setup Instructions
-
-1. **Copy templates to active scripts:**
-
+1. Copy templates to parent directory and remove .template extension:
 ```bash
-   cp scripts/templates/db-backup-dev.sh.template scripts/db-backup-dev.sh
-   cp scripts/templates/db-backup.sh.template scripts/db-backup.sh
-   cp scripts/templates/db-download.sh.template scripts/db-download.sh
-   cp scripts/templates/db-restore.sh.template scripts/db-restore.sh
-   cp scripts/templates/db-manager.sh.template scripts/db-manager.sh
+   for f in scripts/templates/*.template; do
+     cp "$f" "scripts/$(basename "$f" .template)"
+   done
 ```
 
-2. **Edit each script and update:**
-   - `DB_PASSWORD="YOUR_PASSWORD_HERE"` → Set your actual password
-   - `SERVER_USER="YOUR_SSH_USERNAME"` → Set your SSH username (in db-download.sh)
-   - `SERVER_PATH="/root/deployment"` → Set your server path (in db-download.sh)
+2. Edit each script and replace placeholders:
+   - `YOUR_PASSWORD_HERE` → Your actual database password
+   - `YOUR_SSH_USERNAME` → Your SSH username
+   - `/path/to/deployment` → Actual server deployment path
+   - `YOUR_KEY` → Your SSH key filename
 
-3. **Make executable:**
-
+3. Make scripts executable:
 ```bash
    chmod +x scripts/db-*.sh
 ```
 
-4. **Test:**
+## Usage
 
+Run the interactive menu:
 ```bash
-   ./scripts/db-manager.sh
+./scripts/db-manager.sh
 ```
 
-## Security
-
-⚠️ **The active scripts (scripts/db-\*.sh) are gitignored** to protect your passwords.
-
-Only these templates are committed to git.
+Or use individual scripts:
+- `./scripts/db-backup-dev.sh` - Backup development database
+- `./scripts/db-download.sh` - Download production database
+- `./scripts/db-restore.sh <file> [--replace|--merge]` - Restore database

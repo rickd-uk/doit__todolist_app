@@ -1,11 +1,7 @@
 #!/bin/bash
 
 # Download Production Database to Local Machine
-#
-# SETUP:
-# 1. Copy this file: cp scripts/templates/db-download.sh.template scripts/db-download.sh
-# 2. Edit scripts/db-download.sh and update SSH settings
-# 3. Make executable: chmod +x scripts/db-download.sh
+# Run this from your LOCAL machine, not the server
 
 set -e
 
@@ -15,11 +11,11 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 # Configuration - UPDATE THESE FOR YOUR SETUP
-SERVER_USER="YOUR_SSH_USERNAME"     # ⚠️ REQUIRED: Your SSH username
-SERVER_HOST="doit.futureisnear.dev" # Update if different
+SERVER_USER="YOUR_SSH_USERNAME" # Change to your SSH username
+SERVER_HOST="doit.futureisnear.dev"
 SERVER_PORT="2222"
-SSH_KEY="$HOME/.ssh/LN"
-SERVER_PATH="/var/www/doit" # ⚠️ REQUIRED: Path on server
+SSH_KEY="$HOME/.ssh/YOUR_KEY"
+SERVER_PATH="/path/to/deployment" # Change to your deployment path on server
 LOCAL_BACKUP_DIR="./db-backups"
 
 # Create local backup directory
@@ -45,10 +41,10 @@ BACKUP_FILE="doit_backup_$TIMESTAMP.sql.gz"
 echo -e "${YELLOW}📦 Creating backup on server...${NC}"
 
 # SSH into server and create backup
-ssh -p "$SERVER_PORT" -i "$SSH_KEY" $SERVER_USER@$SERVER_HOST" <<EOF
+ssh -p "$SERVER_PORT" -i "$SSH_KEY" "$SERVER_USER@$SERVER_HOST" <<EOF
     cd $SERVER_PATH
     mkdir -p db-backups
-    podman exec todolist-postgres pg_dump -U doit_user doit_db | gzip > db-backups/$BACKUP_FILE
+     podman exec todolist-postgres pg_dump -U doit_user doit_db | gzip > db-backups/$BACKUP_FILE
     echo "Backup created: db-backups/$BACKUP_FILE"
 EOF
 
@@ -69,7 +65,7 @@ if [ $? -eq 0 ]; then
   echo -e "${GREEN}  Size: $SIZE${NC}"
   echo ""
   echo -e "${YELLOW}💡 Next steps:${NC}"
-  echo "  To restore to dev: ./scripts/db-restore.sh $LOCAL_BACKUP_DIR/$BACKUP_FILE"
+  echo "  To restore to dev: ./db-restore.sh $LOCAL_BACKUP_DIR/$BACKUP_FILE"
 else
   echo -e "${RED}✗ Download failed!${NC}"
   exit 1
