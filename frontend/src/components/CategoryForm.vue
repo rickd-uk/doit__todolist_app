@@ -4,22 +4,19 @@
 
     <form @submit.prevent="handleSubmit">
       <div class="form-group">
-        <label for="emoji">Icon *</label>
-        <select
-          id="emoji"
-          v-model="formData.emoji"
-          @change="updateNameFromEmoji"
-          required
-          class="form-control emoji-select"
-        >
-          <option
+        <label>Icon *</label>
+        <div class="emoji-grid">
+          <div
             v-for="emoji in availableEmojis"
             :key="emoji.icon"
-            :value="emoji.icon"
+            class="emoji-option"
+            :class="{ selected: formData.emoji === emoji.icon }"
+            @click="selectEmoji(emoji)"
+            :title="emoji.name"
           >
-            {{ emoji.icon }} {{ emoji.name }}
-          </option>
-        </select>
+            {{ emoji.icon }}
+          </div>
+        </div>
       </div>
 
       <div class="form-group">
@@ -121,8 +118,8 @@ export default {
     const allEmojis = [
       { icon: "🛒", name: "Shopping" },
       { icon: "💊", name: "Health" },
-      { icon: "📚", name: "Teaching" },
-      { icon: "💻", name: "Programming" },
+      { icon: "📚", name: "Study" },
+      { icon: "💻", name: "Work" },
       { icon: "👥", name: "People" },
       { icon: "💰", name: "Money" },
       { icon: "💡", name: "Ideas" },
@@ -131,6 +128,12 @@ export default {
       { icon: "📞", name: "Calls" },
       { icon: "✈️", name: "Travel" },
       { icon: "🎯", name: "Goals" },
+      { icon: "🍕", name: "Food" },
+      { icon: "🎮", name: "Hobby" },
+      { icon: "🔧", name: "Repairs" },
+      { icon: "🎁", name: "Events" },
+      { icon: "🐕", name: "Pets" },
+      { icon: "📝", name: "Writing" },
     ];
 
     // Filter out emojis already used by other categories
@@ -204,16 +207,13 @@ export default {
       }
     };
 
-    const updateNameFromEmoji = () => {
+    const selectEmoji = (emoji) => {
+      formData.value.emoji = emoji.icon;
+
       // Only auto-update name if we're creating a new category (not editing)
-      // and only suggest the default name - user can still change it
       if (!isEditing.value) {
-        const selectedEmoji = formData.value.emoji;
-        const emojiData = allEmojis.find((e) => e.icon === selectedEmoji);
-        if (emojiData) {
-          formData.value.name = emojiData.name;
-          checkCategoryNameExists();
-        }
+        formData.value.name = emoji.name;
+        checkCategoryNameExists();
       }
     };
 
@@ -241,9 +241,9 @@ export default {
       formData,
       categoryNameError,
       availableEmojis,
+      selectEmoji,
       randomizeColor,
       handleSubmit,
-      updateNameFromEmoji,
       checkCategoryNameExists,
     };
   },
@@ -251,9 +251,45 @@ export default {
 </script>
 
 <style scoped>
-.emoji-select {
-  font-size: 18px;
-  padding: 12px 14px;
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  gap: 6px;
+  padding: 6px;
+  background: #f7fafc;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.emoji-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.emoji-option:hover {
+  background: #edf2f7;
+  transform: scale(1.15);
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.emoji-option.selected {
+  background: #667eea;
+  border-color: #5568d3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .form-control-textarea {
@@ -299,11 +335,17 @@ export default {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+@media (max-width: 480px) {
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+    max-height: 180px;
+  }
+
+  .emoji-option {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+}
 </style>
-``` Key changes: 1. **Filter out used emojis**: The `availableEmojis` computed
-property now filters based on emoji icon (not name), so already-used emojis
-won't appear in the dropdown 2. **Allow custom names**: Users can now type any
-name they want - the auto-fill from emoji is just a suggestion that can be
-changed 3. **Better validation**: Button is disabled only when there's a
-duplicate name error OR the name field is empty Save to: ```
-/home/claude/frontend/src/components/CategoryForm.vue

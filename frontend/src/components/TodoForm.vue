@@ -58,22 +58,19 @@
         <!-- Inline New Category Form -->
         <div v-if="showNewCategoryForm" class="new-category-form">
           <div class="form-group">
-            <label for="newCategoryEmoji">Icon *</label>
-            <select
-              id="newCategoryEmoji"
-              v-model="newCategory.emoji"
-              @change="updateCategoryNameFromEmoji"
-              required
-              class="form-control emoji-select"
-            >
-              <option
+            <label>Icon *</label>
+            <div class="emoji-grid">
+              <div
                 v-for="emoji in availableEmojis"
                 :key="emoji.icon"
-                :value="emoji.icon"
+                class="emoji-option"
+                :class="{ selected: newCategory.emoji === emoji.icon }"
+                @click="selectNewCategoryEmoji(emoji)"
+                :title="emoji.name"
               >
-                {{ emoji.icon }} {{ emoji.name }}
-              </option>
-            </select>
+                {{ emoji.icon }}
+              </div>
+            </div>
           </div>
 
           <div class="form-group">
@@ -228,37 +225,11 @@ export default {
       { icon: "🎯", name: "Goals" },
     ];
 
-    // Emoji to name mapping
-    const emojiNameMap = {
-      "🛒": "Shopping",
-      "💊": "Health",
-      "📚": "Teaching",
-      "💻": "Programming",
-      "👥": "People",
-      "💰": "Money",
-      "💡": "Ideas",
-      "🏃": "Exercise",
-      "🏠": "Home",
-      "📞": "Calls",
-      "✈️": "Travel",
-      "🎯": "Goals",
-    };
-
     // Filter out emojis whose categories already exist
     const availableEmojis = computed(() => {
-      const existingNames = props.categories.map((cat) =>
-        cat.name.toLowerCase(),
-      );
-      return allEmojis.filter(
-        (emoji) => !existingNames.includes(emoji.name.toLowerCase()),
-      );
+      const usedEmojis = props.categories.map((cat) => cat.emoji);
+      return allEmojis.filter((emoji) => !usedEmojis.includes(emoji.icon));
     });
-
-    // Generate today's date in YYYY-MM-DD format
-    const getTodayDate = () => {
-      const today = new Date();
-      return today.toISOString().split("T")[0];
-    };
 
     // Determine default category based on active tab
     const getDefaultCategory = () => {
@@ -277,7 +248,7 @@ export default {
       categoryId: props.todo?.categoryId || getDefaultCategory(),
       dateToComplete: props.todo?.dateToComplete
         ? new Date(props.todo.dateToComplete).toISOString().split("T")[0]
-        : "", // No default date
+        : "",
     });
 
     const generateRandomColor = () => {
@@ -325,12 +296,10 @@ export default {
       }
     };
 
-    const updateCategoryNameFromEmoji = () => {
-      const selectedEmoji = newCategory.value.emoji;
-      if (emojiNameMap[selectedEmoji]) {
-        newCategory.value.name = emojiNameMap[selectedEmoji];
-        checkCategoryNameExists();
-      }
+    const selectNewCategoryEmoji = (emoji) => {
+      newCategory.value.emoji = emoji.icon;
+      newCategory.value.name = emoji.name;
+      checkCategoryNameExists();
     };
 
     const toggleNewCategoryForm = () => {
@@ -419,7 +388,7 @@ export default {
       createNewCategory,
       setQuickDate,
       handleSubmit,
-      updateCategoryNameFromEmoji,
+      selectNewCategoryEmoji,
       checkCategoryNameExists,
     };
   },
@@ -466,6 +435,47 @@ export default {
 
 .new-category-form .form-group:last-of-type {
   margin-bottom: 12px;
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 5px;
+  padding: 6px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.emoji-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  font-size: 18px;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.emoji-option:hover {
+  background: #edf2f7;
+  transform: scale(1.15);
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.emoji-option.selected {
+  background: #667eea;
+  border-color: #5568d3;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .form-control-textarea {
@@ -545,10 +555,6 @@ export default {
   transform: translateY(-1px);
 }
 
-.emoji-select {
-  font-size: 16px;
-}
-
 @media (max-width: 480px) {
   .date-input-group {
     flex-direction: column;
@@ -560,6 +566,17 @@ export default {
 
   .btn-quick-date {
     width: 100%;
+  }
+
+  .emoji-grid {
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    max-height: 140px;
+  }
+
+  .emoji-option {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
   }
 }
 </style>
