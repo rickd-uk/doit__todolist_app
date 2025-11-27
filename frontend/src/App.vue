@@ -187,8 +187,20 @@ export default {
 
     const createCategory = async (categoryData) => {
       try {
+        const keepOpen = categoryData.keepOpen;
+        delete categoryData.keepOpen; // rm before sending to API
+
         await store.dispatch("createCategory", categoryData);
-        showNewCategoryModal.value = false;
+
+        await store.dispatch("fetchCategories");
+
+        // do not close modal - CategoryForm will handle it via checkbox
+        // showNewCategoryModal.value = false;
+
+        // only close modal if keepOpen is false
+        if (!keepOpen) {
+          showNewCategoryModal.value = false;
+        }
       } catch (error) {
         console.error("Failed to create category:", error);
       }

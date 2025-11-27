@@ -74,6 +74,17 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            v-model="keepModalOpen"
+            class="checkbox-input"
+          />
+          <span class="checkbox-text"> Keep open to add more categories</span>
+        </label>
+      </div>
+
       <div class="form-actions">
         <button
           type="button"
@@ -95,7 +106,7 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 
 export default {
   name: "CategoryForm",
@@ -113,6 +124,7 @@ export default {
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.category);
     const categoryNameError = ref("");
+    const keepModalOpen = ref(false);
 
     // All available emojis with their default names
     const allEmojis = [
@@ -221,6 +233,22 @@ export default {
       formData.value.color = generateRandomColor();
     };
 
+    watch(
+      () => props.categories.length,
+      () => {
+        // Only update if we're creating and keeping modal open
+        if (
+          keepModalOpen.value &&
+          !isEditing.value &&
+          availableEmojis.value.length > 0
+        ) {
+          const nextEmoji = availableEmojis.value[0];
+          formData.value.emoji = nextEmoji.icon;
+          formData.value.name = nextEmoji.name;
+        }
+      },
+    );
+
     const handleSubmit = () => {
       if (categoryNameError.value || !formData.value.name.trim()) {
         return;
@@ -231,9 +259,23 @@ export default {
         name: formData.value.name.trim(),
         description: formData.value.description || null,
         color: formData.value.color,
+        keepOpen: keepModalOpen.value && !isEditing.value,
       };
 
       emit("submit", submitData);
+
+      // If keepModalOpen is checked & we're creating (not editing), reset form
+      if (keepModalOpen.value && !isEditing.value) {
+        //reset form immediately, watcher will update emoji When
+        // categories refresh
+        formData.value = {
+          emoji: formData.value.emoji,
+          name: "",
+          description: "",
+          color: generateRandomColor(),
+        };
+        categoryNameError.value = "";
+      }
     };
 
     return {
@@ -241,6 +283,7 @@ export default {
       formData,
       categoryNameError,
       availableEmojis,
+      keepModalOpen,
       selectEmoji,
       randomizeColor,
       handleSubmit,
@@ -334,6 +377,27 @@ export default {
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px 0;
+}
+
+.checkbox-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox-text {
+  color: #4a5568;
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {

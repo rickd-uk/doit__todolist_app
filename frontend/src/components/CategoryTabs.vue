@@ -42,16 +42,14 @@
           @click="editCategory(activeCategory)"
           title="Edit category"
         >
-          <span class="action-icon">⚙️</span>
-          <span class="action-label">Edit</span>
+          ⚙️
         </button>
         <button
           class="btn-action btn-delete-category"
           @click="deleteCategory(activeCategory)"
           title="Delete category"
         >
-          <span class="action-icon">❌</span>
-          <span class="action-label">Delete</span>
+          ❌
         </button>
       </div>
     </div>
@@ -86,7 +84,6 @@
 
 <script>
 import { computed, ref } from "vue";
-import { useStore } from "vuex";
 
 export default {
   name: "CategoryTabs",
@@ -106,7 +103,6 @@ export default {
   },
   emits: ["selectCategory", "editCategory", "deleteCategory"],
   setup(props, { emit }) {
-    const store = useStore();
     const showDescriptionBar = ref(true);
 
     const sortedCategories = computed(() => {
@@ -217,22 +213,13 @@ export default {
   padding: 6px 10px;
   border: none;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   background: white;
   border: 2px solid #e2e8f0;
   color: #4a5568;
-}
-
-.action-icon {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.action-label {
-  display: inline;
 }
 
 .btn-action:hover {
