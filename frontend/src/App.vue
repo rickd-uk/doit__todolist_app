@@ -14,6 +14,13 @@
         >
           ➕ ✓
         </button>
+        <button
+          @click="showManageModal = true"
+          class="btn btn-manage btn-compact"
+          title="Manage categories"
+        >
+          ⚙️
+        </button>
       </div>
 
       <CategoryTabs
@@ -89,6 +96,16 @@
       @cancel="cancelDeleteCategory"
     />
 
+    <!-- Show Manage Modal -->
+    <Modal v-if="showManageModal" @close="showManageModal = false">
+      <ManageCategories
+        :categories="categories"
+        :todos="allTodos"
+        @close="showManageModal = false"
+        @deleteAll="handleDeleteAllCategories"
+      />
+    </Modal>
+
     <!-- Loading Overlay -->
     <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
@@ -111,6 +128,7 @@ import TodoForm from "./components/TodoForm.vue";
 import CategoryForm from "./components/CategoryForm.vue";
 import DeleteCategoryModal from "./components/DeleteCategoryModal.vue";
 import Modal from "./components/Modal.vue";
+import ManageCategories from "./components/ManageCategories.vue";
 
 export default {
   name: "App",
@@ -120,6 +138,7 @@ export default {
     TodoForm,
     CategoryForm,
     DeleteCategoryModal,
+    ManageCategories,
     Modal,
   },
   setup() {
@@ -130,6 +149,8 @@ export default {
     const showNewCategoryModal = ref(false);
     const showEditCategoryModal = ref(false);
     const showDeleteCategoryModal = ref(false);
+    const showManageModal = ref(false);
+
     const editingTodo = ref(null);
     const editingCategory = ref(null);
     const deletingCategory = ref(null);
@@ -250,6 +271,33 @@ export default {
       deletingCategory.value = null;
     };
 
+    const handleDeleteAllCategories = async (alsoDeleteTodos) => {
+      try {
+        const categoriesToDelete = categories.value.filter(
+          (cat) => cat.name !== "Inbox",
+        );
+
+        if (alsoDeleteTodos) {
+          // Delete all todos in categories
+          const todosToDelete = allTodos.value.filter(
+            (todo) => todo.categoryId !== null,
+          );
+          for (const todo of todosToDelete) {
+            await store.dispatch("deleteTodo", todo.id);
+          }
+        }
+
+        // Delete all categories
+        for (const category of categoriesToDelete) {
+          await store.dispatch("deleteCategory", category.id);
+        }
+
+        showManageModal.value = false;
+      } catch (error) {
+        console.error("Failed to delete all categories:", error);
+      }
+    };
+
     const updateCategory = async (categoryData) => {
       try {
         await store.dispatch("updateCategory", {
@@ -302,6 +350,7 @@ export default {
       editingCategory,
       deletingCategory,
       categories,
+      showManageModal,
       allTodos,
       filteredTodos,
       activeCategory,
@@ -318,6 +367,7 @@ export default {
       showDeleteCategoryDialog,
       handleDeleteCategory,
       cancelDeleteCategory,
+      handleDeleteAllCategories,
       createCategoryFromTodoForm,
       updateTodos,
       clearError,
@@ -339,5 +389,14 @@ export default {
   padding: 6px 12px;
   font-size: 16px;
   min-height: 32px;
+}
+
+.btn-manage {
+  background: #718096;
+  color: white;
+}
+
+.btn-manage:hover {
+  background: #4a5568;
 }
 </style>
