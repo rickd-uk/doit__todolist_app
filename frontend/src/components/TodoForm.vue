@@ -55,37 +55,107 @@
 
       <div class="form-group">
         <label for="dateToComplete">Due Date</label>
-        <div class="date-input-group">
+        <div class="date-input-wrapper">
           <input
             id="dateToComplete"
             v-model="formData.dateToComplete"
             type="date"
             class="form-control"
           />
-          <button
-            type="button"
-            @click="setQuickDate('tomorrow')"
-            class="btn btn-quick-date"
-            title="Tomorrow"
-          >
-            Tomorrow
-          </button>
-          <button
-            type="button"
-            @click="setQuickDate('2days')"
-            class="btn btn-quick-date"
-            title="In 2 days"
-          >
-            2 days
-          </button>
-          <button
-            type="button"
-            @click="setQuickDate('week')"
-            class="btn btn-quick-date"
-            title="In 7 days"
-          >
-            7 days
-          </button>
+
+          <div class="quick-dates-container">
+            <div class="quick-dates-group">
+              <button
+                type="button"
+                @click="clearDate"
+                class="btn btn-quick-date btn-clear"
+                title="Clear due date"
+              >
+                None
+              </button>
+            </div>
+
+            <div class="quick-dates-group">
+              <button
+                type="button"
+                @click="setQuickDate('tomorrow')"
+                class="btn btn-quick-date"
+                title="Tomorrow"
+              >
+                +1d
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('2days')"
+                class="btn btn-quick-date"
+                title="In 2 days"
+              >
+                +2d
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('3days')"
+                class="btn btn-quick-date"
+                title="In 3 days"
+              >
+                +3d
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('4days')"
+                class="btn btn-quick-date"
+                title="In 4 days"
+              >
+                +4d
+              </button>
+            </div>
+
+            <div class="quick-dates-group">
+              <button
+                type="button"
+                @click="setQuickDate('week')"
+                class="btn btn-quick-date"
+                title="In 1 week"
+              >
+                +1w
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('2weeks')"
+                class="btn btn-quick-date"
+                title="In 2 weeks"
+              >
+                +2w
+              </button>
+            </div>
+
+            <div class="quick-dates-group">
+              <button
+                type="button"
+                @click="setQuickDate('month')"
+                class="btn btn-quick-date"
+                title="In 1 month"
+              >
+                +1mo
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('2months')"
+                class="btn btn-quick-date"
+                title="In 2 months"
+              >
+                +2mo
+              </button>
+              <button
+                type="button"
+                @click="setQuickDate('3months')"
+                class="btn btn-quick-date"
+                title="In 3 months"
+              >
+                +3mo
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -145,7 +215,7 @@ export default {
       categoryId: props.todo?.categoryId || getDefaultCategory(),
       dateToComplete: props.todo?.dateToComplete
         ? new Date(props.todo.dateToComplete).toISOString().split("T")[0]
-        : "",
+        : new Date().toISOString().split("T")[0], // Default to today
     });
 
     const filteredCategories = computed(() => {
@@ -154,6 +224,10 @@ export default {
 
     const selectCategory = (categoryId) => {
       formData.value.categoryId = categoryId;
+    };
+
+    const clearDate = () => {
+      formData.value.dateToComplete = "";
     };
 
     const setQuickDate = (type) => {
@@ -167,8 +241,26 @@ export default {
         case "2days":
           targetDate.setDate(today.getDate() + 2);
           break;
+        case "3days":
+          targetDate.setDate(today.getDate() + 3);
+          break;
+        case "4days":
+          targetDate.setDate(today.getDate() + 4);
+          break;
         case "week":
           targetDate.setDate(today.getDate() + 7);
+          break;
+        case "2weeks":
+          targetDate.setDate(today.getDate() + 14);
+          break;
+        case "month":
+          targetDate.setMonth(today.getMonth() + 1);
+          break;
+        case "2months":
+          targetDate.setMonth(today.getMonth() + 2);
+          break;
+        case "3months":
+          targetDate.setMonth(today.getMonth() + 3);
           break;
       }
 
@@ -191,6 +283,7 @@ export default {
       formData,
       filteredCategories,
       selectCategory,
+      clearDate,
       setQuickDate,
       handleSubmit,
     };
@@ -245,29 +338,44 @@ export default {
   font-family: inherit;
 }
 
-.date-input-group {
+.date-input-wrapper {
   display: flex;
-  gap: 6px;
-  align-items: stretch;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.date-input-group .form-control {
-  flex: 1;
-  min-width: 150px;
+.date-input-wrapper .form-control {
+  width: 100%;
+}
+
+.quick-dates-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.quick-dates-group {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  background: #f7fafc;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
 }
 
 .btn-quick-date {
-  padding: 8px 10px;
-  background: #edf2f7;
+  padding: 6px 10px;
+  background: white;
   color: #4a5568;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border: 1px solid #cbd5e0;
+  border-radius: 5px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  min-width: 45px;
 }
 
 .btn-quick-date:hover {
@@ -277,17 +385,31 @@ export default {
   transform: translateY(-1px);
 }
 
+.btn-clear {
+  background: #fff5f5;
+  color: #e53e3e;
+  border-color: #feb2b2;
+}
+
+.btn-clear:hover {
+  background: #e53e3e;
+  color: white;
+  border-color: #e53e3e;
+}
+
 @media (max-width: 480px) {
-  .date-input-group {
+  .quick-dates-container {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .date-input-group .form-control {
+  .quick-dates-group {
     width: 100%;
+    justify-content: space-between;
   }
 
   .btn-quick-date {
-    width: 100%;
+    flex: 1;
   }
 
   .category-emoji-selector {
