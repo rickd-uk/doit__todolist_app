@@ -47,7 +47,10 @@
               @click="viewTodo(todo)"
               title="Click to view full description"
             >
-              {{ truncateText(todo.description, 60) }}
+              {{ truncateText(todo.description.split("\n")[0], 60) }}
+              <span v-if="todo.description.includes('\n')" class="more-text"
+                >...</span
+              >
             </p>
 
             <div class="todo-meta">
@@ -94,7 +97,7 @@
 
     <!-- Todo Detail Modal -->
     <div v-if="viewingTodo" class="modal-overlay" @click.self="closeViewModal">
-      <div class="modal-content modal-wide">
+      <div class="modal-content modal-constrained">
         <button class="modal-close" @click="closeViewModal">×</button>
         <div class="todo-detail">
           <h2>{{ viewingTodo.title }}</h2>
@@ -263,17 +266,18 @@ export default {
   text-decoration: underline;
 }
 
+.more-text {
+  color: #a0aec0;
+  font-style: italic;
+}
+
 .category-name-mobile {
   display: inline;
 }
 
-.modal-compact {
-  max-width: 500px;
-}
-
-.modal-wide {
-  max-width: 95vw;
-  width: 100%;
+.modal-constrained {
+  max-width: 700px;
+  width: 90%;
 }
 
 .todo-detail {
@@ -357,6 +361,10 @@ export default {
 
   .detail-actions .btn {
     width: 100%;
+  }
+
+  .modal-constrained {
+    width: 95%;
   }
 }
 </style>
