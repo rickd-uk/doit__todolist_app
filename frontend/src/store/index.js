@@ -1,6 +1,39 @@
 import { createStore } from "vuex";
 import api from "../services/api";
 
+const DEFAULT_SETTINGS = {
+  dateFormat: "relative", // 'relative' or 'explicit'
+  dueDateColors: {
+    overdue: "#fee2e2",
+    today: "#fef2f2",
+    tomorrow: "#fff7ed",
+    twoDays: "#fffbeb",
+    threeDays: "#fefce8",
+    week: "#fefce8",
+  },
+};
+
+// Load settings from localStorage
+const loadSettings = () => {
+  try {
+    const saved = localStorage.getItem("doit_settings");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        dueDateColors: {
+          ...DEFAULT_SETTINGS.dueDateColors,
+          ...(parsed.dueDateColors || {}),
+        },
+      };
+    }
+  } catch (e) {
+    console.error("Error loading settings:", e);
+  }
+  return DEFAULT_SETTINGS;
+};
+
 export default createStore({
   state: {
     todos: [],
@@ -8,6 +41,7 @@ export default createStore({
     activeCategory: "all",
     loading: false,
     error: null,
+    settings: loadSettings(),
   },
 
   getters: {
@@ -36,6 +70,12 @@ export default createStore({
     isLoading: (state) => state.loading,
 
     error: (state) => state.error,
+
+    settings: (state) => state.settings,
+
+    dateFormat: (state) => state.settings.dateFormat,
+
+    dueDateColors: (state) => state.settings.dueDateColors,
   },
 
   mutations: {
@@ -89,6 +129,23 @@ export default createStore({
 
     SET_ERROR(state, error) {
       state.error = error;
+    },
+
+    SET_SETTINGS(state, settings) {
+      state.settings = {
+        ...state.settings,
+        ...settings,
+        dueDateColors: {
+          ...state.settings.dueDateColors,
+          ...(settings.dueDateColors || {}),
+        },
+      };
+      // Save to localStorage
+      try {
+        localStorage.setItem("doit_settings", JSON.stringify(state.settings));
+      } catch (e) {
+        console.error("Error saving settings:", e);
+      }
     },
   },
 
@@ -211,6 +268,10 @@ export default createStore({
 
     setActiveCategory({ commit }, categoryId) {
       commit("SET_ACTIVE_CATEGORY", categoryId);
+    },
+
+    updateSettings({ commit }, settings) {
+      commit("SET_SETTINGS", settings);
     },
   },
 });

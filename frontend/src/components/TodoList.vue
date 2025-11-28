@@ -13,7 +13,12 @@
       handle=".drag-handle"
     >
       <template #item="{ element: todo }">
-        <div class="todo-item" :key="todo.id" :class="getDueDateClass(todo)">
+        <div
+          class="todo-item"
+          :key="todo.id"
+          :class="getDueDateClass(todo)"
+          :style="getDueDateStyle(todo)"
+        >
           <div class="drag-handle" title="Drag to reorder">
             <span>⋮⋮</span>
           </div>
@@ -167,6 +172,21 @@ export default {
       type: String,
       required: true,
     },
+    dateFormat: {
+      type: String,
+      default: "relative",
+    },
+    dueDateColors: {
+      type: Object,
+      default: () => ({
+        overdue: "#fee2e2",
+        today: "#fef2f2",
+        tomorrow: "#fff7ed",
+        twoDays: "#fffbeb",
+        threeDays: "#fefce8",
+        week: "#fefce8",
+      }),
+    },
   },
   emits: ["editTodo", "deleteTodo", "updateTodos"],
   setup(props, { emit }) {
@@ -212,10 +232,34 @@ export default {
     const formatDateShort = (date) => {
       if (!date) return "N/A";
       const d = new Date(date);
-      return d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
+
+      if (props.dateFormat === "relative") {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const compareDate = new Date(d);
+        compareDate.setHours(0, 0, 0, 0);
+
+        const diffTime = compareDate - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) return `${Math.abs(diffDays)}d ago`;
+        if (diffDays === 0) return "Today";
+        if (diffDays === 1) return "Tomorrow";
+        if (diffDays <= 7) return `In ${diffDays}d`;
+        if (diffDays <= 14) return "In 2w";
+        if (diffDays <= 30) return `In ${Math.ceil(diffDays / 7)}w`;
+        return `In ${Math.ceil(diffDays / 30)}mo`;
+      } else {
+        // Explicit format
+        return d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year:
+            d.getFullYear() !== new Date().getFullYear()
+              ? "numeric"
+              : undefined,
+        });
+      }
     };
 
     const truncateText = (text, maxLength) => {
@@ -258,6 +302,33 @@ export default {
       return "";
     };
 
+    const getDueDateStyle = (todo) => {
+      if (!todo.dateToComplete) return {};
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const dueDate = new Date(todo.dateToComplete);
+      dueDate.setHours(0, 0, 0, 0);
+
+      const diffTime = dueDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      let bgColor = "";
+      if (diffDays < 0) bgColor = props.dueDateColors.overdue;
+      else if (diffDays === 0) bgColor = props.dueDateColors.today;
+      else if (diffDays === 1) bgColor = props.dueDateColors.tomorrow;
+      else if (diffDays === 2) bgColor = props.dueDateColors.twoDays;
+      else if (diffDays === 3) bgColor = props.dueDateColors.threeDays;
+      else if (diffDays <= 7) bgColor = props.dueDateColors.week;
+
+      if (bgColor) {
+        return {
+          backgroundColor: bgColor,
+        };
+      }
+      return {};
+    };
+
     return {
       localTodos,
       viewingTodo,
@@ -269,6 +340,7 @@ export default {
       closeViewModal,
       editFromView,
       getDueDateClass,
+      getDueDateStyle,
     };
   },
 };
@@ -297,36 +369,34 @@ export default {
   display: inline;
 }
 
-/* Due date color coding */
-.due-overdue {
-  background: #fee !important;
+/* Due date styling - borders only, colors come from inline styles */
+.due-overdue,
+.due-today,
+.due-tomorrow,
+.due-2days,
+.due-3days,
+.due-week {
   border-left: 4px solid #dc2626 !important;
 }
 
 .due-today {
-  background: #fef2f2 !important;
-  border-left: 4px solid #ef4444 !important;
   box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2) !important;
 }
 
 .due-tomorrow {
-  background: #fff7ed !important;
-  border-left: 4px solid #f97316 !important;
+  border-left-color: #f97316 !important;
 }
 
 .due-2days {
-  background: #fffbeb !important;
-  border-left: 4px solid #f59e0b !important;
+  border-left-color: #f59e0b !important;
 }
 
 .due-3days {
-  background: #fefce8 !important;
-  border-left: 4px solid #eab308 !important;
+  border-left-color: #eab308 !important;
 }
 
 .due-week {
-  background: #fefce8 !important;
-  border-left: 4px solid #d4d700 !important;
+  border-left-color: #d4d700 !important;
 }
 
 .modal-constrained {

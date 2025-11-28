@@ -2,25 +2,41 @@
   <div id="app" class="app-container">
     <div class="app-content">
       <div class="compact-header">
-        <button
-          @click="showNewCategoryModal = true"
-          class="btn btn-primary btn-compact"
-        >
-          ➕ 📂
-        </button>
-        <button
-          @click="showNewTodoModal = true"
-          class="btn btn-success btn-compact"
-        >
-          ➕ ✓
-        </button>
-        <button
-          @click="showManageModal = true"
-          class="btn btn-manage btn-compact"
-          title="Manage categories"
-        >
-          ⚙️
-        </button>
+        <div class="header-left">
+          <button
+            @click="showNewCategoryModal = true"
+            class="btn btn-primary btn-compact"
+          >
+            ➕ 📂
+          </button>
+          <button
+            @click="showNewTodoModal = true"
+            class="btn btn-success btn-compact"
+          >
+            ➕ ✓
+          </button>
+          <button
+            @click="showManageModal = true"
+            class="btn btn-manage btn-compact"
+            title="Manage categories"
+          >
+            ⚙️
+          </button>
+        </div>
+
+        <div class="header-center">
+          <span class="current-date">{{ currentDate }}</span>
+        </div>
+
+        <div class="header-right">
+          <button
+            @click="showSettingsModal = true"
+            class="btn btn-settings btn-compact"
+            title="Settings"
+          >
+            🔧
+          </button>
+        </div>
       </div>
 
       <CategoryTabs
@@ -36,6 +52,8 @@
         <TodoList
           :todos="filteredTodos"
           :activeCategory="activeCategory"
+          :dateFormat="dateFormat"
+          :dueDateColors="dueDateColors"
           @editTodo="editTodo"
           @deleteTodo="deleteTodo"
           @updateTodos="updateTodos"
@@ -96,13 +114,22 @@
       @cancel="cancelDeleteCategory"
     />
 
-    <!-- Show Manage Modal -->
+    <!-- Manage Categories Modal -->
     <Modal v-if="showManageModal" @close="showManageModal = false">
       <ManageCategories
         :categories="categories"
         :todos="allTodos"
         @close="showManageModal = false"
         @deleteAll="handleDeleteAllCategories"
+      />
+    </Modal>
+
+    <!-- Settings Modal -->
+    <Modal v-if="showSettingsModal" @close="showSettingsModal = false">
+      <Settings
+        :settings="settings"
+        @save="handleSaveSettings"
+        @cancel="showSettingsModal = false"
       />
     </Modal>
 
@@ -120,7 +147,7 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "vuex";
 import CategoryTabs from "./components/CategoryTabs.vue";
 import TodoList from "./components/TodoList.vue";
@@ -129,6 +156,7 @@ import CategoryForm from "./components/CategoryForm.vue";
 import DeleteCategoryModal from "./components/DeleteCategoryModal.vue";
 import Modal from "./components/Modal.vue";
 import ManageCategories from "./components/ManageCategories.vue";
+import Settings from "./components/Settings.vue";
 
 export default {
   name: "App",
@@ -139,6 +167,7 @@ export default {
     CategoryForm,
     DeleteCategoryModal,
     ManageCategories,
+    Settings,
     Modal,
   },
   setup() {
@@ -150,10 +179,12 @@ export default {
     const showEditCategoryModal = ref(false);
     const showDeleteCategoryModal = ref(false);
     const showManageModal = ref(false);
+    const showSettingsModal = ref(false);
 
     const editingTodo = ref(null);
     const editingCategory = ref(null);
     const deletingCategory = ref(null);
+    const currentDate = ref("");
 
     const categories = computed(() => store.getters.allCategories);
     const allTodos = computed(() => store.getters.allTodos);
@@ -161,10 +192,35 @@ export default {
     const activeCategory = computed(() => store.getters.activeCategory);
     const isLoading = computed(() => store.getters.isLoading);
     const error = computed(() => store.getters.error);
+    const settings = computed(() => store.getters.settings);
+    const dateFormat = computed(() => store.getters.dateFormat);
+    const dueDateColors = computed(() => store.getters.dueDateColors);
+
+    const updateCurrentDate = () => {
+      const now = new Date();
+      const options = {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      };
+      currentDate.value = now.toLocaleDateString("en-US", options);
+    };
+
+    let dateInterval;
 
     onMounted(async () => {
       await store.dispatch("fetchCategories");
       await store.dispatch("fetchTodos");
+      updateCurrentDate();
+      // Update date every minute
+      dateInterval = setInterval(updateCurrentDate, 60000);
+    });
+
+    onUnmounted(() => {
+      if (dateInterval) {
+        clearInterval(dateInterval);
+      }
     });
 
     const selectCategory = (categoryId) => {
@@ -209,16 +265,11 @@ export default {
     const createCategory = async (categoryData) => {
       try {
         const keepOpen = categoryData.keepOpen;
-        delete categoryData.keepOpen; // rm before sending to API
+        delete categoryData.keepOpen;
 
         await store.dispatch("createCategory", categoryData);
-
         await store.dispatch("fetchCategories");
 
-        // do not close modal - CategoryForm will handle it via checkbox
-        // showNewCategoryModal.value = false;
-
-        // only close modal if keepOpen is false
         if (!keepOpen) {
           showNewCategoryModal.value = false;
         }
@@ -278,7 +329,6 @@ export default {
         );
 
         if (alsoDeleteTodos) {
-          // Delete all todos in categories
           const todosToDelete = allTodos.value.filter(
             (todo) => todo.categoryId !== null,
           );
@@ -287,7 +337,6 @@ export default {
           }
         }
 
-        // Delete all categories
         for (const category of categoriesToDelete) {
           await store.dispatch("deleteCategory", category.id);
         }
@@ -336,6 +385,11 @@ export default {
       }
     };
 
+    const handleSaveSettings = (newSettings) => {
+      store.dispatch("updateSettings", newSettings);
+      showSettingsModal.value = false;
+    };
+
     const clearError = () => {
       store.commit("SET_ERROR", null);
     };
@@ -346,16 +400,21 @@ export default {
       showNewCategoryModal,
       showEditCategoryModal,
       showDeleteCategoryModal,
+      showManageModal,
+      showSettingsModal,
       editingTodo,
       editingCategory,
       deletingCategory,
       categories,
-      showManageModal,
       allTodos,
       filteredTodos,
       activeCategory,
       isLoading,
       error,
+      settings,
+      dateFormat,
+      dueDateColors,
+      currentDate,
       selectCategory,
       createTodo,
       editTodo,
@@ -370,6 +429,7 @@ export default {
       handleDeleteAllCategories,
       createCategoryFromTodoForm,
       updateTodos,
+      handleSaveSettings,
       clearError,
     };
   },
@@ -379,10 +439,38 @@ export default {
 <style scoped>
 .compact-header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px;
   padding: 8px 12px;
   background: #f7fafc;
   border-bottom: 1px solid #e2e8f0;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.header-right {
+  justify-content: flex-end;
+}
+
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.current-date {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  white-space: nowrap;
+  padding: 0 12px;
 }
 
 .btn-compact {
@@ -398,5 +486,37 @@ export default {
 
 .btn-manage:hover {
   background: #4a5568;
+}
+
+.btn-settings {
+  background: #805ad5;
+  color: white;
+}
+
+.btn-settings:hover {
+  background: #6b46c1;
+}
+
+@media (max-width: 768px) {
+  .compact-header {
+    flex-wrap: wrap;
+  }
+
+  .header-left,
+  .header-right {
+    flex: 0 0 auto;
+  }
+
+  .header-center {
+    order: 3;
+    flex-basis: 100%;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .current-date {
+    font-size: 12px;
+  }
 }
 </style>
