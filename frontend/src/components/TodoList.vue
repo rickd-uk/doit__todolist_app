@@ -13,7 +13,7 @@
       handle=".drag-handle"
     >
       <template #item="{ element: todo }">
-        <div class="todo-item" :key="todo.id">
+        <div class="todo-item" :key="todo.id" :class="getDueDateClass(todo)">
           <div class="drag-handle" title="Drag to reorder">
             <span>⋮⋮</span>
           </div>
@@ -237,6 +237,27 @@ export default {
       closeViewModal();
     };
 
+    const getDueDateClass = (todo) => {
+      if (!todo.dateToComplete) return "";
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      const dueDate = new Date(todo.dateToComplete);
+      dueDate.setHours(0, 0, 0, 0);
+
+      const diffTime = dueDate - now;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) return "due-overdue";
+      if (diffDays === 0) return "due-today";
+      if (diffDays === 1) return "due-tomorrow";
+      if (diffDays === 2) return "due-2days";
+      if (diffDays === 3) return "due-3days";
+      if (diffDays <= 7) return "due-week";
+
+      return "";
+    };
+
     return {
       localTodos,
       viewingTodo,
@@ -247,6 +268,7 @@ export default {
       viewTodo,
       closeViewModal,
       editFromView,
+      getDueDateClass,
     };
   },
 };
@@ -273,6 +295,38 @@ export default {
 
 .category-name-mobile {
   display: inline;
+}
+
+/* Due date color coding */
+.due-overdue {
+  background: #fee !important;
+  border-left: 4px solid #dc2626 !important;
+}
+
+.due-today {
+  background: #fef2f2 !important;
+  border-left: 4px solid #ef4444 !important;
+  box-shadow: 0 1px 3px rgba(239, 68, 68, 0.2) !important;
+}
+
+.due-tomorrow {
+  background: #fff7ed !important;
+  border-left: 4px solid #f97316 !important;
+}
+
+.due-2days {
+  background: #fffbeb !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.due-3days {
+  background: #fefce8 !important;
+  border-left: 4px solid #eab308 !important;
+}
+
+.due-week {
+  background: #fefce8 !important;
+  border-left: 4px solid #d4d700 !important;
 }
 
 .modal-constrained {
@@ -353,6 +407,32 @@ export default {
   .todo-date {
     font-size: 11px;
     padding: 3px 8px !important;
+  }
+
+  /* Make todo header single line on mobile */
+  .todo-header {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .todo-title {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0 !important;
+  }
+
+  .todo-actions {
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .btn-icon {
+    font-size: 18px !important;
+    padding: 4px 6px !important;
   }
 
   .detail-actions {
