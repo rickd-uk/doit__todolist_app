@@ -48,33 +48,6 @@
       </div>
 
       <div class="form-group">
-        <label for="color">Color</label>
-        <div class="color-input-group">
-          <input
-            id="color"
-            v-model="formData.color"
-            type="color"
-            class="form-control-color"
-          />
-          <input
-            v-model="formData.color"
-            type="text"
-            placeholder="#000000"
-            class="form-control"
-            pattern="^#[0-9A-Fa-f]{6}$"
-          />
-          <button
-            type="button"
-            @click="randomizeColor"
-            class="btn btn-secondary"
-            title="Random Color"
-          >
-            🎲 Random
-          </button>
-        </div>
-      </div>
-
-      <div class="form-group">
         <label class="checkbox-label">
           <input
             type="checkbox"
@@ -229,10 +202,6 @@ export default {
       }
     };
 
-    const randomizeColor = () => {
-      formData.value.color = generateRandomColor();
-    };
-
     watch(
       () => props.categories.length,
       () => {
@@ -285,7 +254,6 @@ export default {
       availableEmojis,
       keepModalOpen,
       selectEmoji,
-      randomizeColor,
       handleSubmit,
       checkCategoryNameExists,
     };
@@ -349,29 +317,6 @@ export default {
   font-size: 12px;
   margin-top: 4px;
   font-weight: 500;
-}
-
-.color-input-group {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.form-control-color {
-  width: 60px;
-  height: 40px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.color-input-group .form-control {
-  flex: 1;
-}
-
-.color-input-group .btn {
-  white-space: nowrap;
 }
 
 .btn-primary:disabled {

@@ -27,108 +27,29 @@
       </div>
 
       <div class="form-group">
-        <label for="category">Category</label>
-        <div class="category-input-group">
-          <select
-            id="category"
-            v-model="formData.categoryId"
-            class="form-control"
-            :disabled="showNewCategoryForm"
+        <label>Category</label>
+        <div class="category-emoji-selector">
+          <!-- Inbox option -->
+          <div
+            class="category-emoji-option"
+            :class="{ selected: formData.categoryId === null }"
+            @click="selectCategory(null)"
+            title="Inbox"
           >
-            <option :value="null">📥 Inbox</option>
-            <option
-              v-for="category in filteredCategories"
-              :key="category.id"
-              :value="category.id"
-            >
-              {{ category.emoji }} {{ category.name }}
-            </option>
-          </select>
-          <button
-            type="button"
-            @click="toggleNewCategoryForm"
-            class="btn btn-secondary btn-icon-text"
-            :class="{ 'btn-active': showNewCategoryForm }"
-            :title="showNewCategoryForm ? 'Cancel' : 'New Category'"
+            📥
+          </div>
+
+          <!-- Category options -->
+          <div
+            v-for="category in filteredCategories"
+            :key="category.id"
+            class="category-emoji-option"
+            :class="{ selected: formData.categoryId === category.id }"
+            @click="selectCategory(category.id)"
+            :title="category.name"
           >
-            {{ showNewCategoryForm ? "✖" : "➕" }}
-          </button>
-        </div>
-
-        <!-- Inline New Category Form -->
-        <div v-if="showNewCategoryForm" class="new-category-form">
-          <div class="form-group">
-            <label>Icon *</label>
-            <div class="emoji-grid">
-              <div
-                v-for="emoji in availableEmojis"
-                :key="emoji.icon"
-                class="emoji-option"
-                :class="{ selected: newCategory.emoji === emoji.icon }"
-                @click="selectNewCategoryEmoji(emoji)"
-                :title="emoji.name"
-              >
-                {{ emoji.icon }}
-              </div>
-            </div>
+            {{ category.emoji }}
           </div>
-
-          <div class="form-group">
-            <label for="newCategoryName">Name *</label>
-            <input
-              id="newCategoryName"
-              v-model="newCategory.name"
-              @input="checkCategoryNameExists"
-              type="text"
-              required
-              placeholder="Enter category name"
-              class="form-control"
-              :class="{ 'input-error': categoryNameError }"
-            />
-            <div v-if="categoryNameError" class="error-message">
-              {{ categoryNameError }}
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="newCategoryDescription">Description</label>
-            <textarea
-              id="newCategoryDescription"
-              v-model="newCategory.description"
-              placeholder="Enter description (optional)"
-              class="form-control form-control-textarea"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="newCategoryColor">Color</label>
-            <div class="color-input-group-compact">
-              <input
-                id="newCategoryColor"
-                v-model="newCategory.color"
-                type="color"
-                class="form-control-color"
-              />
-              <button
-                type="button"
-                @click="randomizeNewCategoryColor"
-                class="btn btn-secondary"
-                title="Random Color"
-              >
-                🎲
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            @click="createNewCategory"
-            class="btn btn-success btn-full"
-            :disabled="!newCategory.name || categoryNameError"
-          >
-            ✅ Create Category
-          </button>
         </div>
       </div>
 
@@ -206,30 +127,6 @@ export default {
   emits: ["submit", "cancel", "createCategory"],
   setup(props, { emit }) {
     const isEditing = computed(() => !!props.todo);
-    const showNewCategoryForm = ref(false);
-    const categoryNameError = ref("");
-
-    // All available emojis with their names
-    const allEmojis = [
-      { icon: "🛒", name: "Shopping" },
-      { icon: "💊", name: "Health" },
-      { icon: "📚", name: "Teaching" },
-      { icon: "💻", name: "Programming" },
-      { icon: "👥", name: "People" },
-      { icon: "💰", name: "Money" },
-      { icon: "💡", name: "Ideas" },
-      { icon: "🏃", name: "Exercise" },
-      { icon: "🏠", name: "Home" },
-      { icon: "📞", name: "Calls" },
-      { icon: "✈️", name: "Travel" },
-      { icon: "🎯", name: "Goals" },
-    ];
-
-    // Filter out emojis whose categories already exist
-    const availableEmojis = computed(() => {
-      const usedEmojis = props.categories.map((cat) => cat.emoji);
-      return allEmojis.filter((emoji) => !usedEmojis.includes(emoji.icon));
-    });
 
     // Determine default category based on active tab
     const getDefaultCategory = () => {
@@ -251,73 +148,12 @@ export default {
         : "",
     });
 
-    const generateRandomColor = () => {
-      return (
-        "#" +
-        Math.floor(Math.random() * 16777215)
-          .toString(16)
-          .padStart(6, "0")
-      );
-    };
-
-    // Initialize with first available emoji
-    const getInitialEmoji = () => {
-      return availableEmojis.value.length > 0
-        ? availableEmojis.value[0]
-        : allEmojis[0];
-    };
-
-    const newCategory = ref({
-      emoji: "",
-      name: "",
-      description: "",
-      color: generateRandomColor(),
-    });
-
     const filteredCategories = computed(() => {
       return props.categories.filter((cat) => cat.name !== "Inbox");
     });
 
-    const checkCategoryNameExists = () => {
-      const name = newCategory.value.name.trim();
-      if (!name) {
-        categoryNameError.value = "";
-        return;
-      }
-
-      const exists = props.categories.some(
-        (cat) => cat.name.toLowerCase() === name.toLowerCase(),
-      );
-
-      if (exists) {
-        categoryNameError.value = `Category "${name}" already exists`;
-      } else {
-        categoryNameError.value = "";
-      }
-    };
-
-    const selectNewCategoryEmoji = (emoji) => {
-      newCategory.value.emoji = emoji.icon;
-      newCategory.value.name = emoji.name;
-      checkCategoryNameExists();
-    };
-
-    const toggleNewCategoryForm = () => {
-      showNewCategoryForm.value = !showNewCategoryForm.value;
-      if (showNewCategoryForm.value) {
-        const initialEmoji = getInitialEmoji();
-        newCategory.value = {
-          emoji: initialEmoji.icon,
-          name: initialEmoji.name,
-          description: "",
-          color: generateRandomColor(),
-        };
-        categoryNameError.value = "";
-      }
-    };
-
-    const randomizeNewCategoryColor = () => {
-      newCategory.value.color = generateRandomColor();
+    const selectCategory = (categoryId) => {
+      formData.value.categoryId = categoryId;
     };
 
     const setQuickDate = (type) => {
@@ -339,31 +175,6 @@ export default {
       formData.value.dateToComplete = targetDate.toISOString().split("T")[0];
     };
 
-    const createNewCategory = async () => {
-      if (!newCategory.value.name || categoryNameError.value) return;
-
-      try {
-        emit("createCategory", {
-          emoji: newCategory.value.emoji,
-          name: newCategory.value.name,
-          description: newCategory.value.description || null,
-          color: newCategory.value.color,
-        });
-
-        setTimeout(() => {
-          const createdCategory = props.categories.find(
-            (cat) => cat.name === newCategory.value.name,
-          );
-          if (createdCategory) {
-            formData.value.categoryId = createdCategory.id;
-          }
-          showNewCategoryForm.value = false;
-        }, 500);
-      } catch (error) {
-        console.error("Error creating category:", error);
-      }
-    };
-
     const handleSubmit = () => {
       const submitData = {
         title: formData.value.title,
@@ -379,148 +190,59 @@ export default {
       isEditing,
       formData,
       filteredCategories,
-      showNewCategoryForm,
-      newCategory,
-      categoryNameError,
-      availableEmojis,
-      toggleNewCategoryForm,
-      randomizeNewCategoryColor,
-      createNewCategory,
+      selectCategory,
       setQuickDate,
       handleSubmit,
-      selectNewCategoryEmoji,
-      checkCategoryNameExists,
     };
   },
 };
 </script>
 
 <style scoped>
-.category-input-group {
-  display: flex;
+.category-emoji-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
   gap: 8px;
-  align-items: stretch;
-}
-
-.category-input-group .form-control {
-  flex: 1;
-}
-
-.btn-icon-text {
-  min-width: 42px;
-  font-size: 18px;
-  padding: 8px 12px;
-}
-
-.btn-active {
-  background: #fc8181 !important;
-  color: white !important;
-}
-
-.btn-active:hover {
-  background: #f56565 !important;
-}
-
-.new-category-form {
-  margin-top: 12px;
-  padding: 12px;
+  padding: 8px;
   background: #f7fafc;
   border-radius: 8px;
   border: 2px solid #e2e8f0;
-}
-
-.new-category-form .form-group {
-  margin-bottom: 10px;
-}
-
-.new-category-form .form-group:last-of-type {
-  margin-bottom: 12px;
-}
-
-.emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
-  gap: 5px;
-  padding: 6px;
-  background: white;
-  border-radius: 8px;
-  border: 2px solid #e2e8f0;
-  max-height: 160px;
+  max-height: 200px;
   overflow-y: auto;
 }
 
-.emoji-option {
+.category-emoji-option {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  font-size: 18px;
-  background: #f7fafc;
+  width: 44px;
+  height: 44px;
+  font-size: 24px;
+  background: white;
   border: 2px solid #e2e8f0;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   user-select: none;
 }
 
-.emoji-option:hover {
+.category-emoji-option:hover {
   background: #edf2f7;
-  transform: scale(1.15);
+  transform: scale(1.1);
   border-color: #cbd5e0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.emoji-option.selected {
+.category-emoji-option.selected {
   background: #667eea;
   border-color: #5568d3;
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .form-control-textarea {
   resize: none;
   font-family: inherit;
-}
-
-.input-error {
-  border-color: #fc8181 !important;
-}
-
-.error-message {
-  color: #fc8181;
-  font-size: 12px;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.color-input-group-compact {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.form-control-color {
-  width: 50px;
-  height: 38px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.color-input-group-compact .btn {
-  flex: 1;
-  font-size: 20px;
-}
-
-.btn-full {
-  width: 100%;
-}
-
-.btn-full:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .date-input-group {
@@ -568,15 +290,15 @@ export default {
     width: 100%;
   }
 
-  .emoji-grid {
-    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
-    max-height: 140px;
+  .category-emoji-selector {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+    max-height: 160px;
   }
 
-  .emoji-option {
-    width: 32px;
-    height: 32px;
-    font-size: 16px;
+  .category-emoji-option {
+    width: 40px;
+    height: 40px;
+    font-size: 22px;
   }
 }
 </style>
