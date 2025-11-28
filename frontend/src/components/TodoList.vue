@@ -176,15 +176,24 @@ export default {
       type: String,
       default: "relative",
     },
+    enableDueDateColors: {
+      type: Boolean,
+      default: true,
+    },
     dueDateColors: {
       type: Object,
       default: () => ({
-        overdue: "#fee2e2",
-        today: "#fef2f2",
-        tomorrow: "#fff7ed",
-        twoDays: "#fffbeb",
-        threeDays: "#fefce8",
-        week: "#fefce8",
+        overdue: "#fca5a5",
+        today: "#fb923c",
+        tomorrow: "#fbbf24",
+        twoDays: "#fde047",
+        threeDays: "#fef08a",
+        fourToSeven: "#d9f99d",
+        eightToFourteen: "#a7f3d0",
+        fifteenToThirty: "#bfdbfe",
+        oneToTwo: "#c7d2fe",
+        twoToThree: "#ddd6fe",
+        threePlus: "#e9d5ff",
       }),
     },
   },
@@ -282,7 +291,7 @@ export default {
     };
 
     const getDueDateClass = (todo) => {
-      if (!todo.dateToComplete) return "";
+      if (!todo.dateToComplete || !props.enableDueDateColors) return "";
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -297,13 +306,16 @@ export default {
       if (diffDays === 1) return "due-tomorrow";
       if (diffDays === 2) return "due-2days";
       if (diffDays === 3) return "due-3days";
-      if (diffDays <= 7) return "due-week";
-
-      return "";
+      if (diffDays <= 7) return "due-4to7";
+      if (diffDays <= 14) return "due-8to14";
+      if (diffDays <= 30) return "due-15to30";
+      if (diffDays <= 60) return "due-1to2mo";
+      if (diffDays <= 90) return "due-2to3mo";
+      return "due-3plus";
     };
 
     const getDueDateStyle = (todo) => {
-      if (!todo.dateToComplete) return {};
+      if (!todo.dateToComplete || !props.enableDueDateColors) return {};
 
       const now = new Date();
       now.setHours(0, 0, 0, 0);
@@ -319,7 +331,12 @@ export default {
       else if (diffDays === 1) bgColor = props.dueDateColors.tomorrow;
       else if (diffDays === 2) bgColor = props.dueDateColors.twoDays;
       else if (diffDays === 3) bgColor = props.dueDateColors.threeDays;
-      else if (diffDays <= 7) bgColor = props.dueDateColors.week;
+      else if (diffDays <= 7) bgColor = props.dueDateColors.fourToSeven;
+      else if (diffDays <= 14) bgColor = props.dueDateColors.eightToFourteen;
+      else if (diffDays <= 30) bgColor = props.dueDateColors.fifteenToThirty;
+      else if (diffDays <= 60) bgColor = props.dueDateColors.oneToTwo;
+      else if (diffDays <= 90) bgColor = props.dueDateColors.twoToThree;
+      else bgColor = props.dueDateColors.threePlus;
 
       if (bgColor) {
         return {
@@ -375,7 +392,12 @@ export default {
 .due-tomorrow,
 .due-2days,
 .due-3days,
-.due-week {
+.due-4to7,
+.due-8to14,
+.due-15to30,
+.due-1to2mo,
+.due-2to3mo,
+.due-3plus {
   border-left: 4px solid #dc2626 !important;
 }
 
@@ -395,8 +417,28 @@ export default {
   border-left-color: #eab308 !important;
 }
 
-.due-week {
-  border-left-color: #d4d700 !important;
+.due-4to7 {
+  border-left-color: #84cc16 !important;
+}
+
+.due-8to14 {
+  border-left-color: #10b981 !important;
+}
+
+.due-15to30 {
+  border-left-color: #3b82f6 !important;
+}
+
+.due-1to2mo {
+  border-left-color: #6366f1 !important;
+}
+
+.due-2to3mo {
+  border-left-color: #8b5cf6 !important;
+}
+
+.due-3plus {
+  border-left-color: #a855f7 !important;
 }
 
 .modal-constrained {

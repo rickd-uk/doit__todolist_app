@@ -53,6 +53,7 @@
           :todos="filteredTodos"
           :activeCategory="activeCategory"
           :dateFormat="dateFormat"
+          :enableDueDateColors="enableDueDateColors"
           :dueDateColors="dueDateColors"
           @editTodo="editTodo"
           @deleteTodo="deleteTodo"
@@ -194,6 +195,9 @@ export default {
     const error = computed(() => store.getters.error);
     const settings = computed(() => store.getters.settings);
     const dateFormat = computed(() => store.getters.dateFormat);
+    const enableDueDateColors = computed(
+      () => store.getters.enableDueDateColors,
+    );
     const dueDateColors = computed(() => store.getters.dueDateColors);
 
     const updateCurrentDate = () => {
@@ -413,6 +417,7 @@ export default {
       error,
       settings,
       dateFormat,
+      enableDueDateColors,
       dueDateColors,
       currentDate,
       selectCategory,

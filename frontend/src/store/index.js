@@ -3,13 +3,19 @@ import api from "../services/api";
 
 const DEFAULT_SETTINGS = {
   dateFormat: "relative", // 'relative' or 'explicit'
+  enableDueDateColors: true,
   dueDateColors: {
-    overdue: "#fee2e2",
-    today: "#fef2f2",
-    tomorrow: "#fff7ed",
-    twoDays: "#fffbeb",
-    threeDays: "#fefce8",
-    week: "#fefce8",
+    overdue: "#fca5a5",
+    today: "#fb923c",
+    tomorrow: "#fbbf24",
+    twoDays: "#fde047",
+    threeDays: "#fef08a",
+    fourToSeven: "#d9f99d",
+    eightToFourteen: "#a7f3d0",
+    fifteenToThirty: "#bfdbfe",
+    oneToTwo: "#c7d2fe",
+    twoToThree: "#ddd6fe",
+    threePlus: "#e9d5ff",
   },
 };
 
@@ -74,6 +80,8 @@ export default createStore({
     settings: (state) => state.settings,
 
     dateFormat: (state) => state.settings.dateFormat,
+
+    enableDueDateColors: (state) => state.settings.enableDueDateColors,
 
     dueDateColors: (state) => state.settings.dueDateColors,
   },

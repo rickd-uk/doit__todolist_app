@@ -49,7 +49,21 @@
         </p>
       </div>
 
-      <div class="color-settings">
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input
+            type="checkbox"
+            v-model="localSettings.enableDueDateColors"
+            class="checkbox-input"
+          />
+          <span class="checkbox-text">
+            <strong>Enable due date colors</strong> - Uncheck to disable all
+            coloring
+          </span>
+        </label>
+      </div>
+
+      <div v-if="localSettings.enableDueDateColors" class="color-settings">
         <div class="color-setting-item">
           <label class="color-label">
             <span class="color-name">Overdue</span>
@@ -58,8 +72,16 @@
               v-model="localSettings.dueDateColors.overdue"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('overdue')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.overdue
+              localSettings.dueDateColors.overdue || "None"
             }}</span>
           </label>
         </div>
@@ -72,8 +94,16 @@
               v-model="localSettings.dueDateColors.today"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('today')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.today
+              localSettings.dueDateColors.today || "None"
             }}</span>
           </label>
         </div>
@@ -86,8 +116,16 @@
               v-model="localSettings.dueDateColors.tomorrow"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('tomorrow')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.tomorrow
+              localSettings.dueDateColors.tomorrow || "None"
             }}</span>
           </label>
         </div>
@@ -100,8 +138,16 @@
               v-model="localSettings.dueDateColors.twoDays"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('twoDays')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.twoDays
+              localSettings.dueDateColors.twoDays || "None"
             }}</span>
           </label>
         </div>
@@ -114,8 +160,16 @@
               v-model="localSettings.dueDateColors.threeDays"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('threeDays')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.threeDays
+              localSettings.dueDateColors.threeDays || "None"
             }}</span>
           </label>
         </div>
@@ -125,19 +179,142 @@
             <span class="color-name">Due in 4-7 Days</span>
             <input
               type="color"
-              v-model="localSettings.dueDateColors.week"
+              v-model="localSettings.dueDateColors.fourToSeven"
               class="color-picker"
             />
+            <button
+              type="button"
+              @click="clearColor('fourToSeven')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
             <span class="color-value">{{
-              localSettings.dueDateColors.week
+              localSettings.dueDateColors.fourToSeven || "None"
+            }}</span>
+          </label>
+        </div>
+
+        <div class="color-setting-item">
+          <label class="color-label">
+            <span class="color-name">Due in 8-14 Days</span>
+            <input
+              type="color"
+              v-model="localSettings.dueDateColors.eightToFourteen"
+              class="color-picker"
+            />
+            <button
+              type="button"
+              @click="clearColor('eightToFourteen')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
+            <span class="color-value">{{
+              localSettings.dueDateColors.eightToFourteen || "None"
+            }}</span>
+          </label>
+        </div>
+
+        <div class="color-setting-item">
+          <label class="color-label">
+            <span class="color-name">Due in 15-30 Days</span>
+            <input
+              type="color"
+              v-model="localSettings.dueDateColors.fifteenToThirty"
+              class="color-picker"
+            />
+            <button
+              type="button"
+              @click="clearColor('fifteenToThirty')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
+            <span class="color-value">{{
+              localSettings.dueDateColors.fifteenToThirty || "None"
+            }}</span>
+          </label>
+        </div>
+
+        <div class="color-setting-item">
+          <label class="color-label">
+            <span class="color-name">Due in 1-2 Months</span>
+            <input
+              type="color"
+              v-model="localSettings.dueDateColors.oneToTwo"
+              class="color-picker"
+            />
+            <button
+              type="button"
+              @click="clearColor('oneToTwo')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
+            <span class="color-value">{{
+              localSettings.dueDateColors.oneToTwo || "None"
+            }}</span>
+          </label>
+        </div>
+
+        <div class="color-setting-item">
+          <label class="color-label">
+            <span class="color-name">Due in 2-3 Months</span>
+            <input
+              type="color"
+              v-model="localSettings.dueDateColors.twoToThree"
+              class="color-picker"
+            />
+            <button
+              type="button"
+              @click="clearColor('twoToThree')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
+            <span class="color-value">{{
+              localSettings.dueDateColors.twoToThree || "None"
+            }}</span>
+          </label>
+        </div>
+
+        <div class="color-setting-item">
+          <label class="color-label">
+            <span class="color-name">Due 3+ Months</span>
+            <input
+              type="color"
+              v-model="localSettings.dueDateColors.threePlus"
+              class="color-picker"
+            />
+            <button
+              type="button"
+              @click="clearColor('threePlus')"
+              class="btn-clear-color"
+              title="Remove color"
+            >
+              ✖
+            </button>
+            <span class="color-value">{{
+              localSettings.dueDateColors.threePlus || "None"
             }}</span>
           </label>
         </div>
       </div>
 
-      <button @click="resetColors" class="btn btn-secondary btn-reset">
-        🔄 Reset to Defaults
-      </button>
+      <div v-if="localSettings.enableDueDateColors" class="color-actions">
+        <button @click="resetColors" class="btn btn-secondary btn-reset">
+          🔄 Reset to Defaults
+        </button>
+        <button @click="clearAllColors" class="btn btn-secondary btn-reset">
+          ✖ Clear All Colors
+        </button>
+      </div>
     </div>
 
     <div class="settings-actions">
@@ -153,12 +330,17 @@
 import { ref } from "vue";
 
 const DEFAULT_COLORS = {
-  overdue: "#fee2e2",
-  today: "#fef2f2",
-  tomorrow: "#fff7ed",
-  twoDays: "#fffbeb",
-  threeDays: "#fefce8",
-  week: "#fefce8",
+  overdue: "#fca5a5",
+  today: "#fb923c",
+  tomorrow: "#fbbf24",
+  twoDays: "#fde047",
+  threeDays: "#fef08a",
+  fourToSeven: "#d9f99d",
+  eightToFourteen: "#a7f3d0",
+  fifteenToThirty: "#bfdbfe",
+  oneToTwo: "#c7d2fe",
+  twoToThree: "#ddd6fe",
+  threePlus: "#e9d5ff",
 };
 
 export default {
@@ -173,11 +355,25 @@ export default {
   setup(props, { emit }) {
     const localSettings = ref({
       dateFormat: props.settings.dateFormat || "relative",
+      enableDueDateColors:
+        props.settings.enableDueDateColors !== undefined
+          ? props.settings.enableDueDateColors
+          : true,
       dueDateColors: { ...props.settings.dueDateColors },
     });
 
     const resetColors = () => {
       localSettings.value.dueDateColors = { ...DEFAULT_COLORS };
+    };
+
+    const clearColor = (colorKey) => {
+      localSettings.value.dueDateColors[colorKey] = "";
+    };
+
+    const clearAllColors = () => {
+      Object.keys(localSettings.value.dueDateColors).forEach((key) => {
+        localSettings.value.dueDateColors[key] = "";
+      });
     };
 
     const saveSettings = () => {
@@ -187,6 +383,8 @@ export default {
     return {
       localSettings,
       resetColors,
+      clearColor,
+      clearAllColors,
       saveSettings,
     };
   },
@@ -310,15 +508,41 @@ export default {
   border-radius: 4px;
 }
 
+.btn-clear-color {
+  width: 28px;
+  height: 28px;
+  background: #fff5f5;
+  color: #e53e3e;
+  border: 1px solid #feb2b2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-clear-color:hover {
+  background: #e53e3e;
+  color: white;
+  border-color: #e53e3e;
+}
+
 .color-value {
   font-family: monospace;
-  font-size: 12px;
+  font-size: 11px;
   color: #718096;
   min-width: 70px;
 }
 
-.btn-reset {
-  margin-top: 8px;
+.color-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
 }
 
 .settings-actions {
