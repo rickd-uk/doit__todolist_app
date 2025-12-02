@@ -4,12 +4,12 @@
     <div v-if="!isAuthenticated" class="auth-container">
       <Login
         v-if="showLogin"
-        @success="handleAuthSuccess"
+        @loginSuccess="handleAuthSuccess"
         @switchToSignup="showLogin = false"
       />
       <Signup
         v-else
-        @success="handleAuthSuccess"
+        @signupSuccess="handleAuthSuccess"
         @switchToLogin="showLogin = true"
       />
     </div>
