@@ -9,6 +9,16 @@ const Category = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    userId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: "users",
+        key: "id",
+      },
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    },
     emoji: {
       type: DataTypes.STRING(10),
       allowNull: false,
@@ -17,7 +27,6 @@ const Category = sequelize.define(
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
     },
     description: {
       type: DataTypes.TEXT,
@@ -37,6 +46,12 @@ const Category = sequelize.define(
   {
     tableName: "categories",
     timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["userId", "name"],
+      },
+    ],
   },
 );
 

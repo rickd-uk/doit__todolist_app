@@ -1,41 +1,65 @@
 <template>
   <div id="app" class="app-container">
-    <div class="app-content">
+    <!-- Login/Signup Screen -->
+    <div v-if="!isAuthenticated" class="auth-container">
+      <Login
+        v-if="showLogin"
+        @success="handleAuthSuccess"
+        @switchToSignup="showLogin = false"
+      />
+      <Signup
+        v-else
+        @success="handleAuthSuccess"
+        @switchToLogin="showLogin = true"
+      />
+    </div>
+
+    <!-- Main App -->
+    <div v-else class="app-content">
       <div class="compact-header">
-        <div class="header-left">
-          <button
-            @click="showNewCategoryModal = true"
-            class="btn btn-primary btn-compact"
-          >
-            ➕ 📂
-          </button>
-          <button
-            @click="showNewTodoModal = true"
-            class="btn btn-success btn-compact"
-          >
-            ➕ ✓
-          </button>
-          <button
-            @click="showManageModal = true"
-            class="btn btn-manage btn-compact"
-            title="Manage categories"
-          >
-            ⚙️
-          </button>
+        <div class="compact-header-row">
+          <div class="header-left">
+            <button
+              @click="showNewCategoryModal = true"
+              class="btn btn-primary btn-compact"
+            >
+              ➕ 📂
+            </button>
+            <button
+              @click="showNewTodoModal = true"
+              class="btn btn-success btn-compact"
+            >
+              ➕ ✓
+            </button>
+            <button
+              @click="showManageModal = true"
+              class="btn btn-manage btn-compact"
+              title="Manage categories"
+            >
+              ⚙️
+            </button>
+          </div>
+
+          <div class="header-right">
+            <button
+              @click="showSettingsModal = true"
+              class="btn btn-settings btn-compact"
+              title="Settings"
+            >
+              🔧
+            </button>
+            <button
+              @click="handleLogout"
+              class="btn btn-logout btn-compact"
+              title="Logout"
+            >
+              🚪
+            </button>
+          </div>
         </div>
 
         <div class="header-center">
           <span class="current-date">{{ currentDate }}</span>
-        </div>
-
-        <div class="header-right">
-          <button
-            @click="showSettingsModal = true"
-            class="btn btn-settings btn-compact"
-            title="Settings"
-          >
-            🔧
-          </button>
         </div>
       </div>
 
@@ -150,6 +174,8 @@
 <script>
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "vuex";
+import Login from "./components/Login.vue";
+import Signup from "./components/Signup.vue";
 import CategoryTabs from "./components/CategoryTabs.vue";
 import TodoList from "./components/TodoList.vue";
 import TodoForm from "./components/TodoForm.vue";
@@ -162,6 +188,8 @@ import Settings from "./components/Settings.vue";
 export default {
   name: "App",
   components: {
+    Login,
+    Signup,
     CategoryTabs,
     TodoList,
     TodoForm,
@@ -174,6 +202,8 @@ export default {
   setup() {
     const store = useStore();
 
+    const isAuthenticated = ref(false);
+    const showLogin = ref(true);
     const showNewTodoModal = ref(false);
     const showEditTodoModal = ref(false);
     const showNewCategoryModal = ref(false);
@@ -213,11 +243,14 @@ export default {
 
     let dateInterval;
 
-    onMounted(async () => {
-      await store.dispatch("fetchCategories");
-      await store.dispatch("fetchTodos");
+    onMounted(() => {
+      const token = localStorage.getItem("doit_token");
+      if (token) {
+        isAuthenticated.value = true;
+        loadUserData();
+      }
+
       updateCurrentDate();
-      // Update date every minute
       dateInterval = setInterval(updateCurrentDate, 60000);
     });
 
@@ -226,6 +259,26 @@ export default {
         clearInterval(dateInterval);
       }
     });
+
+    const loadUserData = async () => {
+      await store.dispatch("fetchCategories");
+      await store.dispatch("fetchTodos");
+    };
+
+    const handleAuthSuccess = (data) => {
+      isAuthenticated.value = true;
+      loadUserData();
+    };
+
+    const handleLogout = () => {
+      localStorage.removeItem("doit_token");
+      localStorage.removeItem("doit_user");
+      isAuthenticated.value = false;
+      showLogin.value = true;
+
+      store.commit("SET_TODOS", []);
+      store.commit("SET_CATEGORIES", []);
+    };
 
     const selectCategory = (categoryId) => {
       store.dispatch("setActiveCategory", categoryId);
@@ -399,6 +452,8 @@ export default {
     };
 
     return {
+      isAuthenticated,
+      showLogin,
       showNewTodoModal,
       showEditTodoModal,
       showNewCategoryModal,
@@ -420,6 +475,8 @@ export default {
       enableDueDateColors,
       dueDateColors,
       currentDate,
+      handleAuthSuccess,
+      handleLogout,
       selectCategory,
       createTodo,
       editTodo,
@@ -444,62 +501,50 @@ export default {
 <style scoped>
 .compact-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 12px;
   background: #f7fafc;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.header-left,
+.compact-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.header-left {
+  display: flex;
+  gap: 8px;
+}
+
 .header-right {
   display: flex;
   gap: 8px;
-  flex: 1;
-}
-
-.header-right {
-  justify-content: flex-end;
+  margin-left: auto;
 }
 
 .header-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
+  width: 100%;
+  text-align: center;
+  padding: 4px 0;
 }
 
 .current-date {
   font-size: 13px;
   font-weight: 600;
   color: #4a5568;
-  white-space: nowrap;
-  padding: 0 12px;
 }
 
-.btn-compact {
-  padding: 6px 12px;
-  font-size: 16px;
-  min-height: 32px;
-}
-
-.btn-manage {
-  background: #718096;
+.btn-logout {
+  background: #e53e3e;
   color: white;
 }
 
-.btn-manage:hover {
-  background: #4a5568;
-}
-
-.btn-settings {
-  background: #805ad5;
-  color: white;
-}
-
-.btn-settings:hover {
-  background: #6b46c1;
+.btn-logout:hover {
+  background: #c53030;
 }
 
 @media (max-width: 768px) {

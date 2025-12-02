@@ -10,10 +10,11 @@ const generateRandomColor = () => {
   );
 };
 
-// Get all categories
+// Get all categories for the authenticated user
 exports.getAllCategories = async (req, res) => {
   try {
     const categories = await Category.findAll({
+      where: { userId: req.userId },
       order: [
         ["order", "ASC"],
         ["createdAt", "ASC"],
@@ -31,10 +32,14 @@ exports.getAllCategories = async (req, res) => {
   }
 };
 
-// Get category by ID
+// Get category by ID (user-scoped)
 exports.getCategoryById = async (req, res) => {
   try {
-    const category = await Category.findByPk(req.params.id, {
+    const category = await Category.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.userId,
+      },
       include: [
         {
           model: Todo,
@@ -66,10 +71,24 @@ exports.createCategory = async (req, res) => {
       return res.status(400).json({ error: "Name is required" });
     }
 
-    // Get the highest order value
-    const maxOrder = (await Category.max("order")) || 0;
+    // Check if category name already exists for this user
+    const existingCategory = await Category.findOne({
+      where: {
+        userId: req.userId,
+        name: name,
+      },
+    });
+
+    if (existingCategory) {
+      return res.status(400).json({ error: "Category name already exists" });
+    }
+
+    // Get the highest order value for this user
+    const maxOrder =
+      (await Category.max("order", { where: { userId: req.userId } })) || 0;
 
     const category = await Category.create({
+      userId: req.userId,
       emoji: emoji || "📌",
       name,
       description: description || null,
@@ -90,10 +109,30 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
   try {
     const { emoji, name, description, color } = req.body;
-    const category = await Category.findByPk(req.params.id);
+    const category = await Category.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.userId,
+      },
+    });
 
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
+    }
+
+    // If updating name, check it doesn't conflict with another category
+    if (name && name !== category.name) {
+      const existingCategory = await Category.findOne({
+        where: {
+          userId: req.userId,
+          name: name,
+          id: { [require("sequelize").Op.ne]: req.params.id },
+        },
+      });
+
+      if (existingCategory) {
+        return res.status(400).json({ error: "Category name already exists" });
+      }
     }
 
     await category.update({
@@ -116,7 +155,12 @@ exports.updateCategory = async (req, res) => {
 // Delete category
 exports.deleteCategory = async (req, res) => {
   try {
-    const category = await Category.findByPk(req.params.id);
+    const category = await Category.findOne({
+      where: {
+        id: req.params.id,
+        userId: req.userId,
+      },
+    });
 
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
@@ -125,7 +169,12 @@ exports.deleteCategory = async (req, res) => {
     // Set all todos in this category to null (unspecified)
     await Todo.update(
       { categoryId: null },
-      { where: { categoryId: req.params.id } },
+      {
+        where: {
+          categoryId: req.params.id,
+          userId: req.userId,
+        },
+      },
     );
 
     await category.destroy();
@@ -138,16 +187,37 @@ exports.deleteCategory = async (req, res) => {
 // Reorder categories
 exports.reorderCategories = async (req, res) => {
   try {
-    const { categories } = req.body; // Array of {id, order}
+    const { categories } = req.body;
 
     if (!Array.isArray(categories)) {
       return res.status(400).json({ error: "Categories must be an array" });
     }
 
+    // Verify all categories belong to the user
+    const categoryIds = categories.map((cat) => cat.id);
+    const userCategories = await Category.findAll({
+      where: {
+        id: categoryIds,
+        userId: req.userId,
+      },
+    });
+
+    if (userCategories.length !== categoryIds.length) {
+      return res.status(403).json({ error: "Unauthorized category access" });
+    }
+
     // Update each category's order
     await Promise.all(
       categories.map((cat) =>
-        Category.update({ order: cat.order }, { where: { id: cat.id } }),
+        Category.update(
+          { order: cat.order },
+          {
+            where: {
+              id: cat.id,
+              userId: req.userId,
+            },
+          },
+        ),
       ),
     );
 

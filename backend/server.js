@@ -3,10 +3,12 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const sequelize = require("./config/database");
-const { Category, Todo } = require("./models");
+const { Category, Todo, User } = require("./models");
 
+const authRoutes = require("./routes/authRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const todoRoutes = require("./routes/todoRoutes");
+const authMiddleware = require("./middleware/authMiddleware");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,16 +16,23 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+    origin:
+      process.env.CORS_ORIGIN === "*"
+        ? true
+        : process.env.CORS_ORIGIN || "http://localhost:5173",
     credentials: true,
   }),
 );
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Routes
-app.use("/api/categories", categoryRoutes);
-app.use("/api/todos", todoRoutes);
+app.use("/api/auth", authRoutes); // Public auth routes
+
+// Protected routes - require authentication
+app.use("/api/categories", authMiddleware, categoryRoutes);
+app.use("/api/todos", authMiddleware, todoRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -46,20 +55,6 @@ const startServer = async () => {
     // Sync models (create tables if they don't exist)
     await sequelize.sync();
     console.log("Database models synchronized.");
-
-    // Create default "Inbox" category if it doesn't exist
-    const [inboxCategory, created] = await Category.findOrCreate({
-      where: { name: "Inbox" },
-      defaults: {
-        description: "Default category for uncategorized todos",
-        color: "#808080",
-        order: -1,
-      },
-    });
-
-    if (created) {
-      console.log('Default "Inbox" category created.');
-    }
 
     // Start server
     app.listen(PORT, () => {
