@@ -267,7 +267,9 @@ export default {
 
     const handleAuthSuccess = (data) => {
       isAuthenticated.value = true;
-      loadUserData();
+      // Force reload to ensure all data loads fresh
+      window.location.reload();
+      //loadUserData();
     };
 
     const handleLogout = () => {
