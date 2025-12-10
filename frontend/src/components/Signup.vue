@@ -20,13 +20,13 @@
         </div>
 
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="username">Username</label>
           <input
-            id="email"
-            v-model="formData.email"
-            type="email"
+            id="username"
+            v-model="formData.username"
+            type="text"
             required
-            placeholder="Enter your email"
+            placeholder="Enter your username"
             class="form-control"
             :disabled="loading"
           />
@@ -91,7 +91,7 @@ export default {
   setup(props, { emit }) {
     const formData = ref({
       name: "",
-      email: "",
+      username: "",
       password: "",
       confirmPassword: "",
     });
@@ -122,7 +122,7 @@ export default {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: formData.value.email,
+            username: formData.value.username,
             password: formData.value.password,
             name: formData.value.name || null,
           }),

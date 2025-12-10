@@ -8,13 +8,13 @@
 
       <form @submit.prevent="handleLogin" class="auth-form">
         <div class="form-group">
-          <label for="email">Email</label>
+          <label for="username">Username</label>
           <input
-            id="email"
-            v-model="formData.email"
-            type="email"
+            id="username"
+            v-model="formData.username"
+            type="tet"
             required
-            placeholder="Enter your email"
+            placeholder="Enter your username"
             class="form-control"
             :disabled="loading"
           />
@@ -64,7 +64,7 @@ export default {
   emits: ["loginSuccess", "switchToSignup"],
   setup(props, { emit }) {
     const formData = ref({
-      email: "",
+      username: "",
       password: "",
     });
     const loading = ref(false);

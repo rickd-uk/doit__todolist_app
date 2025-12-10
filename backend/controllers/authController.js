@@ -13,11 +13,18 @@ const generateToken = (userId) => {
 // Register new user
 exports.signup = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    // Check if signup is enabled
+    if (process.env.SIGNUP_ENABLED === "false") {
+      return res.status(403).json({ error: "Signup is currently disabled" });
+    }
+
+    const { username, password, name } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required" });
     }
 
     if (password.length < 6) {
@@ -27,14 +34,15 @@ exports.signup = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ where: { email } });
+    const existingUser = await User.findOne({ where: { username } });
     if (existingUser) {
-      return res.status(400).json({ error: "Email already registered" });
+      return res.status(400).json({ error: "Username already registered" });
     }
 
     // Create user
     const user = await User.create({
-      email,
+      username,
+      email: null, // keep it null for the time being
       password,
       name: name || null,
     });
@@ -47,6 +55,7 @@ exports.signup = async (req, res) => {
       token,
       user: {
         id: user.id,
+        username: user.username,
         email: user.email,
         name: user.name,
       },
@@ -60,23 +69,25 @@ exports.signup = async (req, res) => {
 // Login user
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required" });
     }
 
     // Find user
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { username } });
     if (!user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid username or password" });
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
+      return res.status(401).json({ error: "Invalid username or password" });
     }
 
     // Generate token
@@ -87,7 +98,7 @@ exports.login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        email: user.email,
+        username: user.username,
         name: user.name,
       },
     });
@@ -101,7 +112,7 @@ exports.login = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findByPk(req.userId, {
-      attributes: ["id", "email", "name", "createdAt"],
+      attributes: ["id", "username", "name", "createdAt"],
     });
 
     if (!user) {
